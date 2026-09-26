@@ -1,0 +1,417 @@
+.page {
+    min-height: 100dvh;
+    padding-bottom: 88px;
+    background: #eeeeee;
+}
+
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+
+    display: flex;
+    align-items: center;
+
+    height: 58px;
+    padding: 0 16px;
+
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid #dddddd;
+}
+
+.headerTitle {
+    margin: 0;
+
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.content {
+    padding: 18px 12px 32px;
+}
+
+.section {
+    margin-bottom: 28px;
+}
+
+.sectionTitle {
+    margin: 0 0 8px 4px;
+
+    color: #666666;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.menuCard {
+    overflow: hidden;
+
+    background: #ffffff;
+    border-radius: 10px;
+}
+
+.menuLink {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    min-height: 52px;
+    padding: 0 14px;
+
+    color: #222222;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    text-decoration: none;
+}
+
+.menuLink:hover {
+    background: #f5f5f5;
+}
+
+.menuArrow {
+    color: #999999;
+}
+
+.accountRow {
+    padding: 10px 14px;
+}
+
+.accountRow button {
+    width: 100%;
+    min-height: 40px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    background: #f3f3f3;
+    border: 0;
+    border-radius: 7px;
+
+    cursor: pointer;
+}
+
+.accountRow button:hover {
+    background: #e5e5e5;
+}
+
+/* 検索別名辞書 */
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    margin-bottom: 18px;
+
+    color: #333333;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    text-decoration: none;
+}
+
+.description {
+    margin: 0 0 24px;
+
+    color: #666666;
+
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.aliasCard {
+    margin-bottom: 12px;
+    padding: 20px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+
+    background: #ffffff;
+    border-radius: 10px;
+}
+
+.aliasToggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    width: 100%;
+    min-height: 48px;
+    padding: 0;
+
+    color: #222222;
+
+    background: transparent;
+    border: 0;
+
+    cursor: pointer;
+    text-align: left;
+}
+
+.aliasToggleIcon {
+    flex-shrink: 0;
+}
+
+.aliasToggle:hover {
+    opacity: 0.7;
+}
+
+.aliasBody {
+    padding-top: 6px;
+}
+
+.deleteItemButton {
+    display: block;
+
+    min-width: 0;
+    min-height: 0;
+    margin: 16px 0 4px auto;
+    padding: 4px 0;
+
+    color: #a06060;
+
+    font-size: 11px;
+    font-weight: 500;
+
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+
+    cursor: pointer;
+}
+
+.deleteItemButton:hover {
+    opacity: 0.7;
+}
+
+.aliasTitle {
+    flex: 1;
+
+    min-width: 0;
+
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+}
+
+.aliasDeleteGroup {
+    padding: 6px 9px;
+
+    color: #555555;
+
+    font-size: 11px;
+
+    background: #f2f2f2;
+    border: 0;
+    border-radius: 6px;
+
+    cursor: pointer;
+}
+
+.aliasDeleteButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 28px;
+    height: 28px;
+    padding: 0;
+
+    color: #777777;
+
+    background: transparent;
+    border: 0;
+
+    cursor: pointer;
+}
+
+.aliasDeleteButton:hover {
+    color: #333333;
+}
+
+.aliasList {
+    margin-top: 0;
+}
+
+.aliasRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    min-height: 36px;
+    padding: 5px 0;
+
+    border-top: 1px solid #eeeeee;
+}
+
+.aliasName {
+    flex: 1;
+
+    min-width: 0;
+
+    font-size: 13px;
+
+    overflow-wrap: anywhere;
+}
+
+.smallButton {
+    padding: 5px 9px;
+
+    color: #444444;
+
+    font-size: 11px;
+
+    background: #f3f3f3;
+    border: 0;
+    border-radius: 6px;
+
+    cursor: pointer;
+}
+
+.addAliasButton {
+    display: block;
+
+    margin-top: 10px;
+    padding: 7px 10px;
+
+    color: #333333;
+
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+
+    background: #f3f3f3;
+    border: 0;
+    border-radius: 6px;
+
+    cursor: pointer;
+}
+
+.addAliasButton:hover {
+    background: #e5e5e5;
+}
+
+.addAliasButton:hover {
+    opacity: 0.7;
+}
+
+.addItemButton {
+    display: flex;
+    align-items: center;
+
+    width: fit-content;
+    margin: 0 auto;
+    padding: 4px 0;
+
+    color: #666666;
+
+    font-size: 11px;
+    font-weight: 400;
+
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+
+    cursor: pointer;
+}
+
+.formCard {
+    padding: 14px;
+
+    background: #ffffff;
+    border-radius: 10px;
+}
+
+.field {
+    margin-bottom: 16px;
+}
+
+.fieldLabel {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: #555555;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.input {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 10px;
+
+    font-size: 14px;
+
+    background: #fafafa;
+    border: 1px solid #dddddd;
+    border-radius: 7px;
+
+    outline: none;
+}
+
+.input:focus {
+    border-color: #999999;
+}
+
+.formButtons {
+    display: flex;
+    gap: 8px;
+}
+
+.formButton {
+    flex: 1;
+
+    min-height: 38px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    background: #f2f2f2;
+    border: 0;
+    border-radius: 7px;
+
+    cursor: pointer;
+}
+
+.error {
+    margin: 0 0 16px;
+
+    color: #b00020;
+
+    font-size: 12px;
+}
+
+.empty {
+    margin: 24px 0;
+
+    color: #777777;
+
+    font-size: 13px;
+    text-align: center;
+}
+
+.headerBackButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+    padding: 0;
+
+    color: #222222;
+
+    background: transparent;
+    border: 0;
+
+    text-decoration: none;
+    cursor: pointer;
+}

@@ -1,0 +1,59 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding:
+        56px 16px 20px;
+
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.imageWrap {
+    position: relative;
+
+    display: inline-block;
+
+    max-width: calc(100vw - 32px);
+    max-height: calc(100dvh - 76px);
+}
+
+.image {
+    display: block;
+
+    width: auto;
+    height: auto;
+
+    max-width: calc(100vw - 32px);
+    max-height: calc(100dvh - 76px);
+
+    object-fit: contain;
+
+    border-radius: 0;
+}
+
+.closeButton {
+    position: absolute;
+
+    top: -38px;
+    right: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+    padding: 0;
+
+    color: #ffffff;
+
+    background: transparent;
+    border: 0;
+
+    cursor: pointer;
+}

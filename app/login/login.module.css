@@ -1,0 +1,96 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    min-height: 100dvh;
+    padding: 32px 24px;
+
+    background: #eeeeee;
+}
+
+.loginArea {
+    width: 100%;
+}
+
+.title {
+    margin: 0 0 32px;
+
+    color: #222222;
+
+    font-family: var(--font-oswald);
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-align: center;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.label {
+    color: #555555;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.input {
+    width: 100%;
+    height: 44px;
+    padding: 0 12px;
+
+    color: #222222;
+
+    font-size: 14px;
+
+    background: #ffffff;
+    border: 1px solid #dddddd;
+    border-radius: 8px;
+
+    outline: none;
+}
+
+.input:focus {
+    border-color: #999999;
+}
+
+.error {
+    margin: 0;
+
+    color: #b05a5a;
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.loginButton {
+    width: 100%;
+    height: 44px;
+    margin-top: 6px;
+
+    color: #ffffff;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    background: #333333;
+    border: 0;
+    border-radius: 8px;
+
+    cursor: pointer;
+}
+
+.loginButton:disabled {
+    opacity: 0.5;
+    cursor: default;
+}

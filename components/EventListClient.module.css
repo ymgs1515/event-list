@@ -1,0 +1,488 @@
+.page {
+    min-height: 100dvh;
+    padding-bottom: 88px;
+    background: #eeeeee;
+}
+
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    height: 58px;
+    padding: 0 16px;
+
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid #dddddd;
+}
+
+.title {
+    margin: 0;
+
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.headerActions {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.iconButton,
+.iconLink {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 38px;
+    height: 38px;
+    padding: 0;
+
+    color: #222222;
+    background: transparent;
+    border: 0;
+    border-radius: 50%;
+
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.iconButton:hover,
+.iconLink:hover {
+    background: #eeeeee;
+}
+
+.iconButtonActive {
+    background: #dddddd;
+}
+
+.activeDot {
+    position: absolute;
+    right: 5px;
+    bottom: 4px;
+
+    width: 5px;
+    height: 5px;
+
+    background: #222222;
+    border-radius: 50%;
+}
+
+.popup {
+    position: absolute;
+    top: 44px;
+    right: 0;
+    z-index: 100;
+
+    width: 190px;
+    padding: 14px;
+
+    background: #ffffff;
+    border: 1px solid #e2e2e2;
+    border-radius: 14px;
+
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.searchInput {
+    width: 100%;
+    padding: 7px 2px;
+
+    font-size: 14px;
+
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid #cccccc;
+    border-radius: 0;
+    outline: none;
+}
+
+.searchInput:focus {
+    border-bottom-color: #222222;
+}
+
+.popupButtons {
+    display: flex;
+    gap: 8px;
+
+    margin-top: 12px;
+}
+
+.popupButton {
+    flex: 1;
+
+    min-height: 28px;
+    padding: 5px 8px;
+
+    font-size: 11px;
+    font-weight: 400;
+
+    background: #f2f2f2;
+    border: 0;
+    border-radius: 7px;
+
+    cursor: pointer;
+}
+
+.popupButton:hover {
+    background: #e5e5e5;
+}
+
+.tagList {
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.tagItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 5px 0;
+
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.tagItem input {
+    margin: 0;
+}
+
+.content {
+    padding: 10px 10px 24px;
+}
+
+.yearSection {
+    margin-bottom: 4px;
+}
+
+.yearTitle {
+    display: none;
+}
+
+.eventList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.eventCard {
+    padding: 0;
+
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.eventMain {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    width: 100%;
+    padding: 13px 12px 11px;
+    box-sizing: border-box;
+
+    color: inherit;
+    font: inherit;
+    text-align: left;
+
+    background: transparent;
+    border: 0;
+
+    cursor: pointer;
+}
+
+.eventDate {
+    flex: 0 0 45px;
+
+    color: #555555;
+
+    font-family:
+        var(--font-oswald),
+        sans-serif;
+
+    font-size: 10px;
+    line-height: 1.4;
+    white-space: nowrap;
+    text-align: right;
+}
+
+.eventTitle {
+    flex: 1;
+
+    min-width: 0;
+
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.25;
+
+    overflow-wrap: anywhere;
+}
+
+.eventExpanded {
+    padding: 0 12px 10px;
+}
+
+.eventDetails {
+    font-size: 10.5px;
+    line-height: 1.45;
+}
+
+.detailRow {
+    display: grid;
+    grid-template-columns: 45px minmax(0, 1fr);
+    column-gap: 14px;
+}
+
+.detailLabel {
+    color: #777777;
+
+    font-family:
+        var(--font-oswald),
+        sans-serif;
+
+    font-size: 10px;
+    text-align: right;
+}
+
+.detailValue {
+    min-width: 0;
+
+    color: #333333;
+
+    overflow-wrap: anywhere;
+}
+
+.detailValue {
+    flex: 1;
+
+    min-width: 0;
+
+    color: #333333;
+
+    overflow-wrap: anywhere;
+}
+
+.detailRow+.detailRow {
+    margin-top: 6px;
+}
+
+.eventActions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+
+    margin-top: 10px;
+}
+
+.editButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 28px;
+    height: 28px;
+    padding: 0;
+
+    color: #555555;
+
+    background: transparent;
+    border: 0;
+
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.editButton:hover {
+    color: #111111;
+}
+
+.editButton:hover,
+.eventActions button:hover {
+    color: #222222;
+    background: transparent;
+}
+
+.editButton,
+.deleteButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 26px;
+    height: 26px;
+    padding: 0;
+
+    color: #555555;
+
+    background: transparent;
+    border: 0;
+
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.editButton:hover,
+.deleteButton:hover {
+    color: #111111;
+    background: transparent;
+}
+
+.empty {
+    margin: 80px 20px;
+
+    color: #777777;
+
+    font-size: 13px;
+    text-align: center;
+}
+
+.nextLiveSection {
+    padding: 18px 10px 18px;
+}
+
+.nextLiveCard {
+    display: block;
+
+    overflow: hidden;
+
+    color: #ffffff;
+
+    background:
+        linear-gradient(145deg,
+            #352b61 0%,
+            #2b2352 55%,
+            #211942 100%);
+
+    border-radius: 10px;
+
+    text-decoration: none;
+}
+
+.nextLiveVisual {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+
+    overflow: hidden;
+
+    background: #eeeeee;
+}
+
+.nextLiveVisual img {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.nextLiveBody {
+    padding: 14px 14px 14px;
+
+    background:
+        linear-gradient(145deg,
+            #352b61 0%,
+            #2b2352 55%,
+            #211942 100%);
+}
+
+.nextLiveLabel {
+    margin-bottom: 10px;
+
+    color: #aebde0;
+
+    font-family:
+        var(--font-oswald),
+        sans-serif;
+
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+}
+
+.nextLiveTitle {
+    color: #ffffff;
+
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.5;
+
+    overflow-wrap: anywhere;
+}
+
+.nextLiveMeta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+
+    margin-top: 10px;
+
+    color: rgba(255, 255, 255, 0.72);
+
+    font-size: 10.5px;
+    line-height: 1.4;
+}
+
+.nextLiveDate {
+    font-family:
+        var(--font-oswald),
+        sans-serif;
+}
+
+.nextLiveTime {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    margin-top: 16px;
+}
+
+.nextLiveTime>div {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.nextLiveTimeLabel {
+    color: rgba(255, 255, 255, 0.68);
+
+    font-size: 9.5px;
+    font-weight: 400;
+}
+
+.nextLiveTimeValue {
+    color: #ffffff;
+
+    font-family:
+        var(--font-oswald),
+        sans-serif;
+
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.artistList {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.artistName {
+    white-space: nowrap;
+}
