@@ -18,6 +18,26 @@ const withSerwist = withSerwistInit({
       url: '/~offline',
       revision,
     },
+    {
+      url: '/manifest.webmanifest',
+      revision,
+    },
+    {
+      url: '/icons/icon-192.png',
+      revision,
+    },
+    {
+      url: '/icons/icon-512.png',
+      revision,
+    },
+    {
+      url: '/icons/icon-maskable-512.png',
+      revision,
+    },
+    {
+      url: '/icons/apple-touch-icon.png',
+      revision,
+    },
   ],
 
   disable:
