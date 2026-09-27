@@ -67,7 +67,7 @@ export default function AppShell({
             }),
             []
         )
-        
+
     const isEventDetailPage =
         pathname.startsWith('/events/') &&
         pathname !== '/events/new'
@@ -142,10 +142,12 @@ export default function AppShell({
             {children}
 
             {hasFooter && (
-                <FooterNav
-                    current={current}
-                    isDirty={pageDirty}
-                />
+                <div id="app-footer">
+                    <FooterNav
+                        current={current}
+                        isDirty={pageDirty}
+                    />
+                </div>
             )}
         </DirtyContext.Provider>
     )
