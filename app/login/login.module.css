@@ -18,9 +18,9 @@
 
     color: #222222;
 
-    font-family: var(--font-oswald);
+    font-family: var(--font-ui);
     font-size: 28px;
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0.06em;
     text-align: center;
 }
@@ -41,7 +41,7 @@
     color: #555555;
 
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .input {
@@ -81,7 +81,7 @@
     color: #ffffff;
 
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
 
     background: #333333;
     border: 0;

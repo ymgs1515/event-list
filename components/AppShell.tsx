@@ -104,36 +104,35 @@ export default function AppShell({
         <DirtyContext.Provider
             value={dirtyContextValue}
         >
+            <header
+                id="app-header"
+                style={{
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 50,
 
-            {hasSharedHeader && (
-                <header
-                    id="app-header"
-                    style={{
-                        position: 'sticky',
-                        top: 0,
-                        zIndex: 50,
+                    display: hasSharedHeader
+                        ? 'flex'
+                        : 'none',
 
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent:
-                            'space-between',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
 
-                        width: '100%',
-                        maxWidth: '480px',
-                        height: '58px',
-                        margin: '0 auto',
-                        padding: '0 16px',
+                    width: '100%',
+                    maxWidth: '480px',
+                    height: '58px',
+                    margin: '0 auto',
+                    padding: '0 16px',
 
-                        background:
-                            'rgba(255, 255, 255, 0.96)',
+                    background:
+                        'rgba(255,255,255,0.96)',
 
-                        borderBottom:
-                            '1px solid #dddddd',
+                    borderBottom:
+                        '1px solid #dddddd',
 
-                        boxSizing: 'border-box',
-                    }}
-                />
-            )}
+                    boxSizing: 'border-box',
+                }}
+            />
 
             {children}
 

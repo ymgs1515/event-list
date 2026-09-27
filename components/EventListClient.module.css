@@ -24,9 +24,8 @@
     margin: 0;
 
     font-size: 18px;
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1;
-    letter-spacing: -0.02em;
 }
 
 .headerActions {
@@ -214,7 +213,7 @@
     color: #555555;
 
     font-family:
-        var(--font-oswald),
+        var(--font-ui),
         sans-serif;
 
     font-size: 10px;
@@ -256,7 +255,7 @@
     color: #777777;
 
     font-family:
-        var(--font-oswald),
+        var(--font-ui),
         sans-serif;
 
     font-size: 10px;
@@ -403,12 +402,12 @@
     color: #aebde0;
 
     font-family:
-        var(--font-oswald),
+        var(--font-ui),
         sans-serif;
 
     font-size: 12px;
     font-weight: 500;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.10em;
 }
 
 .nextLiveTitle {
@@ -437,7 +436,7 @@
 
 .nextLiveDate {
     font-family:
-        var(--font-oswald),
+        var(--font-ui),
         sans-serif;
 }
 
@@ -466,11 +465,11 @@
     color: #ffffff;
 
     font-family:
-        var(--font-oswald),
+        var(--font-ui),
         sans-serif;
 
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1;
 }
 
@@ -485,7 +484,7 @@
 
 .nextLiveWeekday {
     font-family:
-        var(--font-noto-sans-jp),
+        var(--font-ui),
         sans-serif;
 }
 

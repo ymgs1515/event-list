@@ -248,25 +248,13 @@ export default async function Home({
   return (
     <main>
       <EventListClient
-        events={
-          remainingEvents
-        }
-        selectedTags={
-          selectedTags
-        }
-        selectedKeyword={
-          selectedKeyword
-        }
-        searchAliases={
-          searchAliases ?? []
-        }
+        events={remainingEvents}
+        selectedTags={[]}
+        selectedKeyword=""
+        searchAliases={[]}
         mode="scheduled"
-        featuredEvent={
-          nextEvent
-        }
-        featuredImageUrl={
-          nextEventImageUrl
-        }
+        featuredEvent={nextEvent}
+        featuredImageUrl={nextEventImageUrl}
       />
     </main>
   )

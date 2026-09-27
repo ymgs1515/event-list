@@ -1,34 +1,51 @@
 @import "tailwindcss";
 
+
+/* =========================================================
+   グローバル変数
+========================================================= */
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  --font-ui:
+    "Zen Kaku Gothic New",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Hiragino Sans",
+    "Yu Gothic UI",
+    "Yu Gothic",
+    Meiryo,
+    sans-serif;
+
+  --font-code:
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
   --page-gutter: 24px;
   --card-radius: 12px;
 }
 
+/* =========================================================
+   Tailwind Theme
+========================================================= */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-code);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-
-  font-family:
-    var(--font-noto-sans-jp),
-    sans-serif;
-}
+/* =========================================================
+   基本リセット
+========================================================= */
 
 * {
   box-sizing: border-box;
@@ -40,18 +57,43 @@ body {
   min-height: 100%;
 }
 
+
+/* =========================================================
+   BODY
+========================================================= */
+
 body {
+  margin: 0;
+
+  color: var(--foreground);
   background: #d8d8d8;
+
+  font-family: var(--font-ui);
+
+  /*
+     日付・時刻などの数字を
+     できるだけ揃えて表示
+  */
+  font-variant-numeric: tabular-nums;
 }
+
+
+/* =========================================================
+   Next.js ルートコンテナ
+========================================================= */
 
 body>div {
   width: 100%;
 }
 
+
+/* =========================================================
+   アプリ本体
+========================================================= */
+
 main {
   width: 100%;
   max-width: 480px;
-  min-height: 100dvh;
   margin: 0 auto;
 
   background: #eeeeee;
