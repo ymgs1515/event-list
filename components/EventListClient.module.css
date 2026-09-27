@@ -1,5 +1,5 @@
 .page {
-    min-height: 100dvh;
+    min-height: calc(100dvh - 58px);
     padding-bottom: 88px;
     background: #eeeeee;
 }

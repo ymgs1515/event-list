@@ -18,6 +18,7 @@ import {
     restoreListPositionIfNeeded,
     saveListPosition,
 } from '@/lib/listNavigation'
+import AppHeaderPortal from '@/components/AppHeaderPortal'
 
 type Artist = {
     name: string
@@ -538,9 +539,7 @@ export default function EventListClient({
 
     return (
         <div className={styles.page}>
-            <header
-                className={styles.header}
-            >
+            <AppHeaderPortal>
                 <h1
                     className={styles.title}
                 >
@@ -754,7 +753,7 @@ export default function EventListClient({
                         </div>
                     )}
                 </div>
-            </header>
+            </AppHeaderPortal>
 
             {mode === 'scheduled' &&
                 featuredEvent && (

@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import FooterNav from '@/components/FooterNav'
 import EventListClient from '@/components/EventListClient'
 
 type HomeProps = {
@@ -213,7 +212,6 @@ export default async function Home({
           }
         />
       )}
-      <FooterNav current="scheduled" />
     </main>
   )
 }

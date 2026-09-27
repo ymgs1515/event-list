@@ -14,11 +14,14 @@ import {
 } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { compressImage } from '@/lib/image/compress'
-import FooterNav from '@/components/FooterNav'
 import { ChevronLeft, Save } from 'lucide-react'
 import styles from '../EventForm.module.css'
 import MainVisualFrame from '@/components/MainVisualFrame'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import {
+    usePageDirty,
+} from '@/components/AppShell'
+import AppHeaderPortal from '@/components/AppHeaderPortal'
 
 type PhotoItem = {
     id: string
@@ -136,6 +139,8 @@ function NewEventPageContent() {
         officialPhotos,
         personalPhotos,
     ])
+
+    usePageDirty(isDirty)
 
     useEffect(() => {
         if (!mainVisual) {
@@ -784,8 +789,11 @@ function NewEventPageContent() {
         <main
             className={`${styles.page} ${styles.pageEdit}`}
         >
-            <form onSubmit={handleSubmit}>
-                <header className={styles.header}>
+            <form
+                id="new-event-form"
+                onSubmit={handleSubmit}
+            >
+                <AppHeaderPortal>
                     <button
                         type="button"
                         className={styles.backButton}
@@ -805,6 +813,7 @@ function NewEventPageContent() {
 
                     <button
                         type="submit"
+                        form="new-event-form"
                         aria-label="保存"
                         title="保存"
                         className={styles.saveButton}
@@ -814,7 +823,7 @@ function NewEventPageContent() {
                             strokeWidth={2}
                         />
                     </button>
-                </header>
+                </AppHeaderPortal>
 
                 <section className={styles.topCard}>
                     <div
@@ -1567,10 +1576,6 @@ function NewEventPageContent() {
                     setShowBackConfirmDialog(false)
                     goBack()
                 }}
-            />
-
-            <FooterNav
-                isDirty={isDirty}
             />
 
         </main>

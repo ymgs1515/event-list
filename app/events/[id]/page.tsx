@@ -11,7 +11,6 @@ import {
 import { useParams, useRouter, useSearchParams, } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { compressImage } from '@/lib/image/compress'
-import FooterNav from '@/components/FooterNav'
 import { ChevronLeft, Pencil, Save } from 'lucide-react'
 import styles from '../EventForm.module.css'
 import MainVisualFrame from '@/components/MainVisualFrame'
@@ -21,6 +20,10 @@ import {
     requestListPositionRestore,
 } from '@/lib/listNavigation'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import {
+    usePageDirty,
+} from '@/components/AppShell'
+import AppHeaderPortal from '@/components/AppHeaderPortal'
 
 const supabase = createClient()
 
@@ -513,6 +516,10 @@ export default function EventPage() {
         newPersonalPhotos,
         deletedPhotoIds,
     ])
+
+    usePageDirty(
+        isEditing && isDirty
+    )
 
     useEffect(() => {
         return () => {
@@ -1592,10 +1599,11 @@ export default function EventPage() {
                 }`}
         >
             <form
+                id="event-form"
                 onSubmit={handleSubmit}
                 className={styles.eventForm}
             >
-                <header className={styles.header}>
+                <AppHeaderPortal>
                     <button
                         type="button"
                         className={styles.backButton}
@@ -1618,6 +1626,7 @@ export default function EventPage() {
                     {isEditing ? (
                         <button
                             type="submit"
+                            form="event-form"
                             aria-label="保存"
                             title="保存"
                             className={styles.saveButton}
@@ -1645,7 +1654,7 @@ export default function EventPage() {
                             />
                         </button>
                     )}
-                </header>
+                </AppHeaderPortal>
 
                 <section
                     className={`${styles.topCard} ${!isEditing && isMultilineTitle
@@ -3011,10 +3020,6 @@ export default function EventPage() {
                     setShowBackConfirmDialog(false)
                     goBack()
                 }}
-            />
-
-            <FooterNav
-                isDirty={isDirty}
             />
 
         </main>

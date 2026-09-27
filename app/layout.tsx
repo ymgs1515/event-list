@@ -5,6 +5,7 @@ import {
   Noto_Sans_JP,
   Oswald,
 } from 'next/font/google'
+import AppShell from '@/components/AppShell'
 
 const notoSansJP = Noto_Sans_JP({
   subsets: ['latin'],
@@ -42,8 +43,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body
         className={`${notoSansJP.variable} ${oswald.variable}`}
       >
-        {children}
+        <AppShell>
+          {children}
+        </AppShell>
       </body>
+
     </html>
   );
 }

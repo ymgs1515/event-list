@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import ConfirmDialog from '@/components/ConfirmDialog'
 
 type Props = {
     isDirty?: boolean
@@ -63,71 +64,33 @@ export default function LogoutButton({
                 ログアウト
             </button>
 
-            {showLogoutConfirm && (
-                <div
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        background:
-                            'rgba(0, 0, 0, 0.4)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 1000,
-                    }}
-                >
-                    <div
-                        style={{
-                            background: 'white',
-                            padding: '24px',
-                            width:
-                                'calc(100% - 48px)',
-                            maxWidth: '360px',
-                        }}
-                    >
-                        <p>
-                            {isDirty
+            <ConfirmDialog
+                open={showLogoutConfirm}
+                message={
+                    errorMessage
+                        ? errorMessage
+                        : loggingOut
+                            ? 'ログアウトしています...'
+                            : isDirty
                                 ? '未保存データを破棄してログアウトしますか？'
-                                : 'ログアウトしますか？'}
-                        </p>
+                                : 'ログアウトしますか？'
+                }
+                onCancel={() => {
+                    if (loggingOut) {
+                        return
+                    }
 
-                        {errorMessage && (
-                            <p>{errorMessage}</p>
-                        )}
+                    setShowLogoutConfirm(false)
+                    setErrorMessage('')
+                }}
+                onConfirm={() => {
+                    if (loggingOut) {
+                        return
+                    }
 
-                        <div
-                            style={{
-                                display: 'flex',
-                                justifyContent:
-                                    'flex-end',
-                                gap: '16px',
-                            }}
-                        >
-                            <button
-                                type="button"
-                                disabled={loggingOut}
-                                onClick={() =>
-                                    setShowLogoutConfirm(
-                                        false
-                                    )
-                                }
-                            >
-                                いいえ
-                            </button>
-
-                            <button
-                                type="button"
-                                disabled={loggingOut}
-                                onClick={confirmLogout}
-                            >
-                                {loggingOut
-                                    ? 'ログアウト中...'
-                                    : 'はい'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                    void confirmLogout()
+                }}
+            />
         </>
     )
 }

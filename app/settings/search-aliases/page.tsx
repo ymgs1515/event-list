@@ -8,7 +8,6 @@ import {
     useState,
 } from 'react'
 import Link from 'next/link'
-import FooterNav from '@/components/FooterNav'
 import { createClient } from '@/lib/supabase/client'
 import styles from '../settings.module.css'
 import {
@@ -18,6 +17,7 @@ import {
     X,
 } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import AppHeaderPortal from '@/components/AppHeaderPortal'
 
 type SearchAlias = {
     id: string
@@ -393,7 +393,7 @@ export default function SearchAliasesPage() {
 
     return (
         <main className={styles.page}>
-            <header className={styles.header}>
+            <AppHeaderPortal>
                 <Link
                     href="/settings"
                     className={styles.headerBackButton}
@@ -409,7 +409,8 @@ export default function SearchAliasesPage() {
                 <h1 className={styles.headerTitle}>
                     検索別名辞書
                 </h1>
-            </header>
+            </AppHeaderPortal>
+
 
             <div className={styles.content}>
                 <p
@@ -838,7 +839,6 @@ export default function SearchAliasesPage() {
                     )
                 }}
             />
-            <FooterNav current="settings" />
         </main>
     )
 }
