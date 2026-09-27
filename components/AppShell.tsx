@@ -67,20 +67,25 @@ export default function AppShell({
             }),
             []
         )
-
-    const isLoginPage =
-        pathname === '/login'
-
+        
     const isEventDetailPage =
         pathname.startsWith('/events/') &&
         pathname !== '/events/new'
 
     const hasSharedHeader =
-        pathname === '/' ||
-        pathname === '/archive' ||
-        pathname === '/events/new' ||
-        pathname.startsWith('/settings') ||
-        isEventDetailPage
+        pathname !== '/login' &&
+        pathname !== '/~offline' &&
+        (
+            pathname === '/' ||
+            pathname === '/archive' ||
+            pathname === '/events/new' ||
+            pathname.startsWith('/settings') ||
+            isEventDetailPage
+        )
+
+    const hasFooter =
+        pathname !== '/login' &&
+        pathname !== '/~offline'
 
     let current:
         | 'archive'
@@ -136,7 +141,7 @@ export default function AppShell({
 
             {children}
 
-            {!isLoginPage && (
+            {hasFooter && (
                 <FooterNav
                     current={current}
                     isDirty={pageDirty}
