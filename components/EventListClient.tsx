@@ -825,14 +825,36 @@ export default function EventListClient({
                                         styles.nextLiveMeta
                                     }
                                 >
-                                    <span
-                                        className={
-                                            styles.nextLiveDate
-                                        }
-                                    >
-                                        {formatEventDateWithWeekday(
-                                            featuredEvent.event_date
+                                    <span className={styles.nextLiveDate}>
+                                        {featuredEvent.event_date.replaceAll(
+                                            '-',
+                                            '.'
                                         )}
+
+                                        <span
+                                            className={
+                                                styles.nextLiveWeekday
+                                            }
+                                        >
+                                            {' '}
+                                            (
+                                            {
+                                                [
+                                                    '日',
+                                                    '月',
+                                                    '火',
+                                                    '水',
+                                                    '木',
+                                                    '金',
+                                                    '土',
+                                                ][
+                                                new Date(
+                                                    `${featuredEvent.event_date}T00:00:00`
+                                                ).getDay()
+                                                ]
+                                            }
+                                            )
+                                        </span>
                                     </span>
 
                                     {featuredEvent.venue && (
@@ -1074,7 +1096,9 @@ export default function EventListClient({
                                                             >
                                                                 <Link
                                                                     href={detailUrl}
-                                                                    className={styles.editButton}
+                                                                    className={
+                                                                        styles.detailButton
+                                                                    }
                                                                     aria-label="イベントを閲覧"
                                                                     title="閲覧"
                                                                     onClick={saveListPosition}

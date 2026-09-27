@@ -161,7 +161,7 @@
 }
 
 .content {
-    padding: 10px 10px 24px;
+    padding: 10px 0px 24px;
 }
 
 .yearSection {
@@ -176,13 +176,16 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+
+    padding-left: var(--page-gutter);
+    padding-right: var(--page-gutter);
 }
 
 .eventCard {
     padding: 0;
 
     background: #ffffff;
-    border-radius: 8px;
+    border-radius: var(--card-radius);
     overflow: hidden;
 }
 
@@ -233,10 +236,12 @@
 }
 
 .eventExpanded {
-    padding: 0 12px 10px;
+    padding: 0;
 }
 
 .eventDetails {
+    padding: 0 12px;
+
     font-size: 10.5px;
     line-height: 1.45;
 }
@@ -278,15 +283,6 @@
 
 .detailRow+.detailRow {
     margin-top: 6px;
-}
-
-.eventActions {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 12px;
-
-    margin-top: 10px;
 }
 
 .editButton {
@@ -352,7 +348,7 @@
 }
 
 .nextLiveSection {
-    padding: 18px 10px 18px;
+    padding: 18px var(--page-gutter);
 }
 
 .nextLiveCard {
@@ -368,7 +364,7 @@
             #2b2352 55%,
             #211942 100%);
 
-    border-radius: 10px;
+    border-radius: var(--card-radius);
 
     text-decoration: none;
 }
@@ -435,7 +431,7 @@
 
     color: rgba(255, 255, 255, 0.72);
 
-    font-size: 10.5px;
+    font-size: 12px;
     line-height: 1.4;
 }
 
@@ -462,7 +458,7 @@
 .nextLiveTimeLabel {
     color: rgba(255, 255, 255, 0.68);
 
-    font-size: 9.5px;
+    font-size: 10px;
     font-weight: 400;
 }
 
@@ -473,7 +469,7 @@
         var(--font-oswald),
         sans-serif;
 
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
     line-height: 1;
 }
@@ -485,4 +481,36 @@
 
 .artistName {
     white-space: nowrap;
+}
+
+.nextLiveWeekday {
+    font-family:
+        var(--font-noto-sans-jp),
+        sans-serif;
+}
+
+.eventActions {
+    margin-top: 4px;
+}
+
+.detailButton {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    width: 100%;
+    min-height: 36px;
+    padding: 0 14px;
+
+    color: #777777;
+
+    background: transparent;
+
+    text-decoration: none;
+    box-sizing: border-box;
+}
+
+.detailButton:hover {
+    color: #222222;
+    background: #f7f7f7;
 }

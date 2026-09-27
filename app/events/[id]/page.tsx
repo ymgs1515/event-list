@@ -1576,9 +1576,6 @@ export default function EventPage() {
     const hasArtists =
         artists.length > 0
 
-    const hasHashtags =
-        hashtags.length > 0
-
     function getDisplayDomain(url: string) {
         try {
             return new URL(url).hostname.replace(/^www\./, '')
@@ -1677,7 +1674,27 @@ export default function EventPage() {
                                 />
                             ) : (
                                 <div className={styles.dateDisplay}>
-                                    {formatEventDateWithWeekday(eventDate)}
+                                    <span>
+                                        {eventDate.replaceAll('-', '.')}
+                                    </span>
+
+                                    <span className={styles.dateWeekday}>
+                                        {eventDate
+                                            ? ` (${[
+                                                '日',
+                                                '月',
+                                                '火',
+                                                '水',
+                                                '木',
+                                                '金',
+                                                '土',
+                                            ][
+                                            new Date(
+                                                `${eventDate}T00:00:00`
+                                            ).getDay()
+                                            ]})`
+                                            : ''}
+                                    </span>
                                 </div>
                             )}
                         </div>
@@ -2062,11 +2079,39 @@ export default function EventPage() {
                                             styles.ticketDisplayDate
                                         }
                                     >
-                                        {eventDate
-                                            ? formatEventDateWithWeekday(
-                                                eventDate
-                                            )
-                                            : ''}
+                                        {eventDate && (
+                                            <>
+                                                {eventDate.replaceAll(
+                                                    '-',
+                                                    '.'
+                                                )}
+
+                                                <span
+                                                    className={
+                                                        styles.dateWeekday
+                                                    }
+                                                >
+                                                    {' '}
+                                                    (
+                                                    {
+                                                        [
+                                                            '日',
+                                                            '月',
+                                                            '火',
+                                                            '水',
+                                                            '木',
+                                                            '金',
+                                                            '土',
+                                                        ][
+                                                        new Date(
+                                                            `${eventDate}T00:00:00`
+                                                        ).getDay()
+                                                        ]
+                                                    }
+                                                    )
+                                                </span>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
 
@@ -2847,7 +2892,7 @@ export default function EventPage() {
                     </section>
                 )}
 
-                {(isEditing || hasHashtags) && (
+                {isEditing && (
                     <section className={styles.block}>
                         <div className={styles.blockHeader}>
                             <h2 className={styles.blockTitle}>

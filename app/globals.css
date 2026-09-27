@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --page-gutter: 24px;
+  --card-radius: 12px;
 }
 
 @theme inline {
