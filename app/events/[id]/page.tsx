@@ -194,31 +194,116 @@ export default function EventPage() {
     ] = useState(false)
 
     useEffect(() => {
+        let cancelled = false
+
         async function loadEvent() {
             setLoading(true)
             setErrorMessage('')
 
-            const { data: eventData, error: eventError } =
-                await supabase
+            /*
+             * イベント関連データを並列取得
+             */
+
+            const [
+                eventResult,
+                setlistResult,
+                artistResult,
+                hashtagResult,
+                photoResult,
+            ] = await Promise.all([
+                supabase
                     .from('events')
                     .select(`
-            id,
-            event_date,
-            title,
-            seat_block_row,
-            seat_number,
-            venue,
-            doors_time,
-            start_time,
-            ticket_price,
-            memo,
-            official_url,
-            main_visual_path,
-            main_visual_position_x,
-            main_visual_position_y
-          `)
+                    id,
+                    event_date,
+                    title,
+                    seat_block_row,
+                    seat_number,
+                    venue,
+                    doors_time,
+                    start_time,
+                    ticket_price,
+                    memo,
+                    official_url,
+                    main_visual_path,
+                    main_visual_position_x,
+                    main_visual_position_y
+                `)
                     .eq('id', eventId)
-                    .single()
+                    .single(),
+
+                supabase
+                    .from('setlist_items')
+                    .select(
+                        'id, position, display_label, title, detail, note'
+                    )
+                    .eq('event_id', eventId)
+                    .order('position', {
+                        ascending: true,
+                    }),
+
+                supabase
+                    .from('event_artists')
+                    .select('name, sort_order')
+                    .eq('event_id', eventId)
+                    .order('sort_order', {
+                        ascending: true,
+                    }),
+
+                supabase
+                    .from('event_hashtags')
+                    .select('tag, sort_order')
+                    .eq('event_id', eventId)
+                    .order('sort_order', {
+                        ascending: true,
+                    }),
+
+                supabase
+                    .from('event_photos')
+                    .select(`
+                    id,
+                    photo_type,
+                    storage_path,
+                    sort_order
+                `)
+                    .eq('event_id', eventId)
+                    .order('sort_order', {
+                        ascending: true,
+                    }),
+            ])
+
+            if (cancelled) {
+                return
+            }
+
+            const {
+                data: eventData,
+                error: eventError,
+            } = eventResult
+
+            const {
+                data: setlistData,
+                error: setlistError,
+            } = setlistResult
+
+            const {
+                data: artistData,
+                error: artistError,
+            } = artistResult
+
+            const {
+                data: hashtagData,
+                error: hashtagError,
+            } = hashtagResult
+
+            const {
+                data: photoData,
+                error: photoError,
+            } = photoResult
+
+            /*
+             * 取得エラー確認
+             */
 
             if (eventError || !eventData) {
                 setErrorMessage(
@@ -228,64 +313,6 @@ export default function EventPage() {
                 return
             }
 
-            setEventDate(eventData.event_date ?? '')
-            setTitle(eventData.title ?? '')
-
-            setMainVisualPositionX(
-                eventData.main_visual_position_x ?? 50
-            )
-
-            setMainVisualPositionY(
-                eventData.main_visual_position_y ?? 50
-            )
-            setSeatBlockRow(eventData.seat_block_row ?? '')
-            setSeatNumber(eventData.seat_number ?? '')
-            setVenue(eventData.venue ?? '')
-
-            setDoorsTime(
-                eventData.doors_time
-                    ? eventData.doors_time.slice(0, 5)
-                    : ''
-            )
-
-            setStartTime(
-                eventData.start_time
-                    ? eventData.start_time.slice(0, 5)
-                    : ''
-            )
-
-            setTicketPrice(eventData.ticket_price ?? '')
-            setMemo(eventData.memo ?? '')
-            setOfficialUrl(eventData.official_url ?? '')
-            setMainVisualPath(eventData.main_visual_path ?? null)
-
-            if (eventData.main_visual_path) {
-                const { data: signedData, error: signedError } =
-                    await supabase.storage
-                        .from('event-images')
-                        .createSignedUrl(eventData.main_visual_path, 3600)
-
-                if (signedError) {
-                    setErrorMessage(
-                        `MAIN VISUALの取得に失敗しました：${signedError.message}`
-                    )
-                    setLoading(false)
-                    return
-                }
-
-                setMainVisualUrl(signedData.signedUrl)
-
-            } else {
-                setMainVisualUrl(null)
-            }
-
-            const { data: setlistData, error: setlistError } =
-                await supabase
-                    .from('setlist_items')
-                    .select('id, position, display_label, title, detail, note')
-                    .eq('event_id', eventId)
-                    .order('position', { ascending: true })
-
             if (setlistError) {
                 setErrorMessage(
                     `SETLISTの取得に失敗しました：${setlistError.message}`
@@ -293,23 +320,6 @@ export default function EventPage() {
                 setLoading(false)
                 return
             }
-
-            setSetlistItems(
-                (setlistData ?? []).map((item) => ({
-                    id: item.id,
-                    displayLabel: item.display_label ?? '',
-                    title: item.title ?? '',
-                    detail: item.detail ?? '',
-                    note: item.note ?? '',
-                }))
-            )
-
-            const { data: artistData, error: artistError } =
-                await supabase
-                    .from('event_artists')
-                    .select('name, sort_order')
-                    .eq('event_id', eventId)
-                    .order('sort_order', { ascending: true })
 
             if (artistError) {
                 setErrorMessage(
@@ -319,17 +329,6 @@ export default function EventPage() {
                 return
             }
 
-            setArtists(
-                (artistData ?? []).map((item) => item.name)
-            )
-
-            const { data: hashtagData, error: hashtagError } =
-                await supabase
-                    .from('event_hashtags')
-                    .select('tag, sort_order')
-                    .eq('event_id', eventId)
-                    .order('sort_order', { ascending: true })
-
             if (hashtagError) {
                 setErrorMessage(
                     `HASHTAGの取得に失敗しました：${hashtagError.message}`
@@ -337,21 +336,6 @@ export default function EventPage() {
                 setLoading(false)
                 return
             }
-
-            setHashtags(
-                (hashtagData ?? []).map((item) => item.tag)
-            )
-            const { data: photoData, error: photoError } =
-                await supabase
-                    .from('event_photos')
-                    .select(`
-      id,
-      photo_type,
-      storage_path,
-      sort_order
-    `)
-                    .eq('event_id', eventId)
-                    .order('sort_order', { ascending: true })
 
             if (photoError) {
                 setErrorMessage(
@@ -361,95 +345,363 @@ export default function EventPage() {
                 return
             }
 
-            const loadedPhotos: ExistingPhoto[] = []
+            /*
+             * イベント基本情報
+             */
 
-            for (const photo of photoData ?? []) {
-                const { data: signedData, error: signedError } =
-                    await supabase.storage
-                        .from('event-images')
-                        .createSignedUrl(photo.storage_path, 3600)
+            setEventDate(
+                eventData.event_date ?? ''
+            )
 
-                if (signedError) {
+            setTitle(
+                eventData.title ?? ''
+            )
+
+            setMainVisualPositionX(
+                eventData.main_visual_position_x ??
+                50
+            )
+
+            setMainVisualPositionY(
+                eventData.main_visual_position_y ??
+                50
+            )
+
+            setSeatBlockRow(
+                eventData.seat_block_row ?? ''
+            )
+
+            setSeatNumber(
+                eventData.seat_number ?? ''
+            )
+
+            setVenue(
+                eventData.venue ?? ''
+            )
+
+            setDoorsTime(
+                eventData.doors_time
+                    ? eventData.doors_time.slice(
+                        0,
+                        5
+                    )
+                    : ''
+            )
+
+            setStartTime(
+                eventData.start_time
+                    ? eventData.start_time.slice(
+                        0,
+                        5
+                    )
+                    : ''
+            )
+
+            setTicketPrice(
+                eventData.ticket_price ?? ''
+            )
+
+            setMemo(
+                eventData.memo ?? ''
+            )
+
+            setOfficialUrl(
+                eventData.official_url ?? ''
+            )
+
+            setMainVisualPath(
+                eventData.main_visual_path ??
+                null
+            )
+
+            /*
+             * SETLIST
+             */
+
+            const loadedSetlistItems =
+                (setlistData ?? []).map(
+                    (item) => ({
+                        id: item.id,
+                        displayLabel:
+                            item.display_label ??
+                            '',
+                        title:
+                            item.title ?? '',
+                        detail:
+                            item.detail ?? '',
+                        note:
+                            item.note ?? '',
+                    })
+                )
+
+            setSetlistItems(
+                loadedSetlistItems
+            )
+
+            /*
+             * ARTIST
+             */
+
+            const loadedArtists =
+                (artistData ?? []).map(
+                    (item) => item.name
+                )
+
+            setArtists(
+                loadedArtists
+            )
+
+            /*
+             * HASHTAG
+             */
+
+            const loadedHashtags =
+                (hashtagData ?? []).map(
+                    (item) => item.tag
+                )
+
+            setHashtags(
+                loadedHashtags
+            )
+
+            /*
+             * MAIN VISUAL と PHOTO の
+             * 署名付きURLを並列取得
+             */
+
+            const mainVisualRequest =
+                eventData.main_visual_path
+                    ? supabase.storage
+                        .from(
+                            'event-images'
+                        )
+                        .createSignedUrl(
+                            eventData.main_visual_path,
+                            3600
+                        )
+                    : Promise.resolve(null)
+
+            const photoRequests =
+                Promise.all(
+                    (photoData ?? []).map(
+                        async (photo) => {
+                            const {
+                                data,
+                                error,
+                            } =
+                                await supabase.storage
+                                    .from(
+                                        'event-images'
+                                    )
+                                    .createSignedUrl(
+                                        photo.storage_path,
+                                        3600
+                                    )
+
+                            return {
+                                photo,
+                                data,
+                                error,
+                            }
+                        }
+                    )
+                )
+
+            const [
+                mainVisualResult,
+                photoResults,
+            ] = await Promise.all([
+                mainVisualRequest,
+                photoRequests,
+            ])
+
+            if (cancelled) {
+                return
+            }
+
+            /*
+             * MAIN VISUAL
+             */
+
+            if (
+                eventData.main_visual_path
+            ) {
+                if (
+                    !mainVisualResult ||
+                    mainVisualResult.error ||
+                    !mainVisualResult.data
+                ) {
                     setErrorMessage(
-                        `PHOTO画像の取得に失敗しました：${signedError.message}`
+                        `MAIN VISUALの取得に失敗しました：${mainVisualResult
+                            ?.error
+                            ?.message ??
+                        '不明なエラー'
+                        }`
+                    )
+                    setLoading(false)
+                    return
+                }
+
+                setMainVisualUrl(
+                    mainVisualResult.data
+                        .signedUrl
+                )
+            } else {
+                setMainVisualUrl(null)
+            }
+
+            /*
+             * PHOTO
+             */
+
+            const loadedPhotos:
+                ExistingPhoto[] = []
+
+            for (
+                const result of photoResults
+            ) {
+                if (
+                    result.error ||
+                    !result.data
+                ) {
+                    setErrorMessage(
+                        `PHOTO画像の取得に失敗しました：${result.error
+                            ?.message ??
+                        '不明なエラー'
+                        }`
                     )
                     setLoading(false)
                     return
                 }
 
                 loadedPhotos.push({
-                    id: photo.id,
-                    photo_type: photo.photo_type as 'official' | 'personal',
-                    storage_path: photo.storage_path,
-                    sort_order: photo.sort_order,
-                    previewUrl: signedData.signedUrl,
+                    id: result.photo.id,
+
+                    photo_type:
+                        result.photo
+                            .photo_type as
+                        | 'official'
+                        | 'personal',
+
+                    storage_path:
+                        result.photo
+                            .storage_path,
+
+                    sort_order:
+                        result.photo
+                            .sort_order,
+
+                    previewUrl:
+                        result.data
+                            .signedUrl,
                 })
             }
 
             setOfficialPhotos(
                 loadedPhotos.filter(
-                    (photo) => photo.photo_type === 'official'
+                    (photo) =>
+                        photo.photo_type ===
+                        'official'
                 )
             )
 
             setPersonalPhotos(
                 loadedPhotos.filter(
-                    (photo) => photo.photo_type === 'personal'
+                    (photo) =>
+                        photo.photo_type ===
+                        'personal'
                 )
             )
+
+            /*
+             * 編集前の初期状態
+             */
+
             setInitialSnapshot({
-                eventDate: eventData.event_date ?? '',
-                title: eventData.title ?? '',
+                eventDate:
+                    eventData.event_date ?? '',
+
+                title:
+                    eventData.title ?? '',
+
                 mainVisualPositionX:
-                    eventData.main_visual_position_x ?? 50,
+                    eventData
+                        .main_visual_position_x ??
+                    50,
+
                 mainVisualPositionY:
-                    eventData.main_visual_position_y ?? 50,
+                    eventData
+                        .main_visual_position_y ??
+                    50,
+
                 seatBlockRow:
-                    eventData.seat_block_row ?? '',
+                    eventData
+                        .seat_block_row ?? '',
+
                 seatNumber:
-                    eventData.seat_number ?? '',
+                    eventData
+                        .seat_number ?? '',
+
                 venue:
                     eventData.venue ?? '',
+
                 doorsTime:
                     eventData.doors_time
-                        ? eventData.doors_time.slice(0, 5)
+                        ? eventData
+                            .doors_time
+                            .slice(0, 5)
                         : '',
+
                 startTime:
                     eventData.start_time
-                        ? eventData.start_time.slice(0, 5)
+                        ? eventData
+                            .start_time
+                            .slice(0, 5)
                         : '',
+
                 ticketPrice:
-                    eventData.ticket_price ?? '',
+                    eventData
+                        .ticket_price ?? '',
+
                 memo:
                     eventData.memo ?? '',
+
                 officialUrl:
-                    eventData.official_url ?? '',
+                    eventData
+                        .official_url ?? '',
 
                 setlistItems:
-                    (setlistData ?? []).map(
+                    loadedSetlistItems.map(
                         (item) => ({
-                            displayLabel: item.display_label ?? '',
-                            title: item.title ?? '',
-                            detail: item.detail ?? '',
-                            note: item.note ?? '',
+                            displayLabel:
+                                item.displayLabel,
+
+                            title:
+                                item.title,
+
+                            detail:
+                                item.detail,
+
+                            note:
+                                item.note,
                         })
                     ),
 
                 artists:
-                    (artistData ?? []).map(
-                        (item) => item.name
-                    ),
+                    loadedArtists,
 
                 hashtags:
-                    (hashtagData ?? []).map(
-                        (item) => item.tag
-                    ),
+                    loadedHashtags,
             })
 
             setLoading(false)
         }
 
-        loadEvent()
+        void loadEvent()
+
+        return () => {
+            cancelled = true
+        }
     }, [eventId, reloadKey])
 
     const isDirty = useMemo(() => {
@@ -1555,8 +1807,94 @@ export default function EventPage() {
 
     if (loading) {
         return (
-            <main className={styles.page}>
-                <p>読み込み中...</p>
+            <main
+                className={`${styles.page} ${styles.pageView}`}
+            >
+                <div
+                    className={
+                        styles.loadingContent
+                    }
+                >
+                    <div
+                        className={
+                            styles.skeletonTopCard
+                        }
+                    />
+
+                    <div
+                        className={`${styles.skeleton} ${styles.skeletonMainVisual}`}
+                    />
+
+                    <div
+                        className={`${styles.skeleton} ${styles.skeletonTicket}`}
+                    />
+
+                    <div
+                        className={
+                            styles.skeletonCard
+                        }
+                    >
+                        <div
+                            className={`${styles.skeleton} ${styles.skeletonHeading}`}
+                        />
+
+                        <div
+                            className={
+                                styles.skeletonPhotos
+                            }
+                        >
+                            <div
+                                className={`${styles.skeleton} ${styles.skeletonPhoto}`}
+                            />
+                            <div
+                                className={`${styles.skeleton} ${styles.skeletonPhoto}`}
+                            />
+                            <div
+                                className={`${styles.skeleton} ${styles.skeletonPhoto}`}
+                            />
+                        </div>
+                    </div>
+
+                    <div
+                        className={
+                            styles.skeletonCard
+                        }
+                    >
+                        <div
+                            className={`${styles.skeleton} ${styles.skeletonHeading}`}
+                        />
+
+                        <div
+                            className={`${styles.skeleton} ${styles.skeletonLine}`}
+                        />
+
+                        <div
+                            className={`${styles.skeleton} ${styles.skeletonLine}`}
+                        />
+
+                        <div
+                            className={`${styles.skeleton} ${styles.skeletonLine} ${styles.skeletonLineShort}`}
+                        />
+                    </div>
+
+                    <div
+                        className={
+                            styles.skeletonCard
+                        }
+                    >
+                        <div
+                            className={`${styles.skeleton} ${styles.skeletonHeading}`}
+                        />
+
+                        <div
+                            className={`${styles.skeleton} ${styles.skeletonLine}`}
+                        />
+
+                        <div
+                            className={`${styles.skeleton} ${styles.skeletonLine} ${styles.skeletonLineShort}`}
+                        />
+                    </div>
+                </div>
             </main>
         )
     }
