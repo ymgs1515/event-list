@@ -1,9 +1,11 @@
-import { defaultCache } from '@serwist/next/worker'
 import type {
     PrecacheEntry,
     SerwistGlobalConfig,
 } from 'serwist'
-import { Serwist } from 'serwist'
+import {
+    NetworkOnly,
+    Serwist,
+} from 'serwist'
 
 declare global {
     interface WorkerGlobalScope
@@ -20,13 +22,43 @@ const serwist = new Serwist({
     precacheEntries:
         self.__SW_MANIFEST,
 
+    precacheOptions: {
+        cleanupOutdatedCaches: true,
+    },
+
     skipWaiting: true,
     clientsClaim: true,
     navigationPreload: true,
 
-    runtimeCaching:
-        defaultCache,
+    /*
+     * ページはキャッシュしない。
+     * オンライン時は常にネットワークから取得する。
+     */
+    runtimeCaching: [
+        {
+            matcher: ({ request }) =>
+                request.mode === 'navigate',
+            handler: new NetworkOnly(),
+        },
+    ],
+
+    /*
+     * ページ取得に失敗した場合だけ
+     * オフライン画面を表示する。
+     */
+    fallbacks: {
+        entries: [
+            {
+                url: '/~offline',
+                matcher({ request }) {
+                    return (
+                        request.destination ===
+                        'document'
+                    )
+                },
+            },
+        ],
+    },
 })
 
 serwist.addEventListeners()
-
