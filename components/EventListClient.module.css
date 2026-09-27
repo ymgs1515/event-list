@@ -217,6 +217,7 @@
         sans-serif;
 
     font-size: 10px;
+    font-weight: 500;
     line-height: 1.4;
     white-space: nowrap;
     text-align: right;
@@ -226,12 +227,25 @@
     flex: 1;
 
     min-width: 0;
+    min-height: 2.5em;
+
+    display: grid;
+    align-items: center;
 
     font-size: 13px;
     font-weight: 700;
     line-height: 1.25;
 
     overflow-wrap: anywhere;
+}
+
+.eventTitleText {
+    display: block;
+    width: 100%;
+}
+
+.eventCard:has(.eventTitleExpandedSingle) .eventExpanded {
+    margin-top: -8px;
 }
 
 .eventExpanded {

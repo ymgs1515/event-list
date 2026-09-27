@@ -4,6 +4,8 @@ import {
     FormEvent,
     useEffect,
     useState,
+    useLayoutEffect,
+    useRef
 } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -69,6 +71,72 @@ type Props = {
     mode: 'scheduled' | 'archive'
     featuredEvent?: EventItem | null
     featuredImageUrl?: string | null
+}
+
+function EventTitle({
+    title,
+    isExpanded,
+}: {
+    title: string
+    isExpanded: boolean
+}) {
+    const textRef =
+        useRef<HTMLSpanElement>(null)
+
+    const [isSingleLine, setIsSingleLine] =
+        useState(false)
+
+    useLayoutEffect(() => {
+        const element = textRef.current
+
+        if (!element) return
+
+        const checkLineCount = () => {
+            const style =
+                window.getComputedStyle(element)
+
+            const lineHeight =
+                parseFloat(style.lineHeight)
+
+            const height =
+                element.getBoundingClientRect().height
+
+            setIsSingleLine(
+                height <= lineHeight * 1.5
+            )
+        }
+
+        checkLineCount()
+
+        const observer =
+            new ResizeObserver(checkLineCount)
+
+        observer.observe(element)
+
+        return () => {
+            observer.disconnect()
+        }
+    }, [title])
+
+    return (
+        <div
+            className={[
+                styles.eventTitle,
+                isExpanded && isSingleLine
+                    ? styles.eventTitleExpandedSingle
+                    : '',
+            ]
+                .filter(Boolean)
+                .join(' ')}
+        >
+            <span
+                ref={textRef}
+                className={styles.eventTitleText}
+            >
+                {title}
+            </span>
+        </div>
+    )
 }
 
 export default function EventListClient({
@@ -1000,13 +1068,10 @@ export default function EventListClient({
                                                             )}
                                                         </div>
 
-                                                        <div
-                                                            className={
-                                                                styles.eventTitle
-                                                            }
-                                                        >
-                                                            {event.title}
-                                                        </div>
+                                                        <EventTitle
+                                                            title={event.title}
+                                                            isExpanded={isExpanded}
+                                                        />
                                                     </button>
 
                                                     {isExpanded && (

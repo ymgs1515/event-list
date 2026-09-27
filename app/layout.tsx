@@ -1,4 +1,7 @@
-import type { Metadata } from 'next'
+import type {
+  Metadata,
+  Viewport,
+} from 'next'
 
 import '@fontsource/zen-kaku-gothic-new/400.css'
 import '@fontsource/zen-kaku-gothic-new/500.css'
@@ -12,9 +15,20 @@ export const metadata: Metadata = {
   description:
     'ライブやイベントの予定・思い出を記録するアプリ',
   applicationName: '推活ログ',
+
   icons: {
     apple: '/icons/apple-touch-icon.png',
   },
+
+  appleWebApp: {
+    capable: true,
+    title: '推活ログ',
+    statusBarStyle: 'default',
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#ffffff',
 }
 
 export default function RootLayout({
