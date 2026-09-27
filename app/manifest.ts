@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: '推活記録',
-        short_name: '推活記録',
+        name: '推活ログ',
+        short_name: '推活ログ',
         description:
             'ライブやイベントの予定・思い出を記録するアプリ',
         start_url: '/',

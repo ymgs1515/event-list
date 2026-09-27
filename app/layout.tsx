@@ -8,10 +8,10 @@ import './globals.css'
 import AppShell from '@/components/AppShell'
 
 export const metadata: Metadata = {
-  title: '推活記録',
+  title: '推活ログ',
   description:
     'ライブやイベントの予定・思い出を記録するアプリ',
-  applicationName: '推活記録',
+  applicationName: '推活ログ',
   icons: {
     apple: '/icons/apple-touch-icon.png',
   },

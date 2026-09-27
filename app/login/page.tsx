@@ -62,7 +62,7 @@ export default function LoginPage() {
                 }
             >
                 <h1 className={styles.title}>
-                    EVENT LIST
+                    推活ログ
                 </h1>
 
                 <form
