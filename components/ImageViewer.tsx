@@ -1,7 +1,11 @@
 'use client'
 
 import { useEffect } from 'react'
-import { X } from 'lucide-react'
+import {
+    ChevronLeft,
+    ChevronRight,
+    X,
+} from 'lucide-react'
 
 import styles from './ImageViewer.module.css'
 
@@ -9,12 +13,20 @@ type ImageViewerProps = {
     src: string
     alt: string
     onClose: () => void
+    onPrevious?: () => void
+    onNext?: () => void
+    hasPrevious?: boolean
+    hasNext?: boolean
 }
 
 export default function ImageViewer({
     src,
     alt,
     onClose,
+    onPrevious,
+    onNext,
+    hasPrevious,
+    hasNext,
 }: ImageViewerProps) {
     useEffect(() => {
         const previousOverflow =
@@ -27,6 +39,22 @@ export default function ImageViewer({
         ) {
             if (event.key === 'Escape') {
                 onClose()
+            }
+
+            if (
+                event.key === 'ArrowLeft' &&
+                hasPrevious &&
+                onPrevious
+            ) {
+                onPrevious()
+            }
+
+            if (
+                event.key === 'ArrowRight' &&
+                hasNext &&
+                onNext
+            ) {
+                onNext()
             }
         }
 
@@ -44,7 +72,13 @@ export default function ImageViewer({
                 handleKeyDown
             )
         }
-    }, [onClose])
+    }, [
+        onClose,
+        onPrevious,
+        onNext,
+        hasPrevious,
+        hasNext,
+    ])
 
     return (
         <div
@@ -70,7 +104,38 @@ export default function ImageViewer({
                     alt={alt}
                     className={styles.image}
                 />
+
+                {onPrevious && (
+                    <button
+                        type="button"
+                        className={`${styles.navButton} ${styles.previousButton}`}
+                        onClick={onPrevious}
+                        disabled={!hasPrevious}
+                        aria-label="前の画像"
+                    >
+                        <ChevronLeft
+                            size={28}
+                            strokeWidth={2}
+                        />
+                    </button>
+                )}
+
+                {onNext && (
+                    <button
+                        type="button"
+                        className={`${styles.navButton} ${styles.nextButton}`}
+                        onClick={onNext}
+                        disabled={!hasNext}
+                        aria-label="次の画像"
+                    >
+                        <ChevronRight
+                            size={28}
+                            strokeWidth={2}
+                        />
+                    </button>
+                )}
             </div>
         </div>
     )
 }
+

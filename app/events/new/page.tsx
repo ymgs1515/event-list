@@ -14,7 +14,7 @@ import {
 } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { compressImage } from '@/lib/image/compress'
-import { ChevronLeft, Save } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Save } from 'lucide-react'
 import styles from '../EventForm.module.css'
 import MainVisualFrame from '@/components/MainVisualFrame'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -54,7 +54,20 @@ function NewEventPageContent() {
             ? returnToParameter
             : '/'
 
-    const supabase = createClient()
+    const copyFrom =
+        searchParams.get('copyFrom')
+
+    const afterSaveReturnToParameter =
+        searchParams.get('afterSaveReturnTo')
+
+    const afterSaveReturnTo =
+        afterSaveReturnToParameter &&
+            afterSaveReturnToParameter.startsWith('/')
+            ? afterSaveReturnToParameter
+            : returnTo
+
+    const supabase =
+        useMemo(() => createClient(), [])
 
     const [eventDate, setEventDate] = useState('')
     const [title, setTitle] = useState('')
@@ -96,11 +109,260 @@ function NewEventPageContent() {
 
     const [errorMessage, setErrorMessage] = useState('')
     const [loading, setLoading] = useState(false)
+    const [copyLoading, setCopyLoading] =
+        useState(Boolean(copyFrom))
     const [processingImages, setProcessingImages] = useState(false)
     const [
         showBackConfirmDialog,
         setShowBackConfirmDialog,
     ] = useState(false)
+
+    useEffect(() => {
+        if (!copyFrom) {
+            setCopyLoading(false)
+            return
+        }
+
+        let cancelled = false
+
+        async function loadCopySource() {
+            setCopyLoading(true)
+            setErrorMessage('')
+
+            try {
+                const [
+                    eventResult,
+                    setlistResult,
+                    artistResult,
+                    hashtagResult,
+                ] = await Promise.all([
+                    supabase
+                        .from('events')
+                        .select(`
+                            event_date,
+                            title,
+                            venue,
+                            doors_time,
+                            start_time,
+                            ticket_price,
+                            memo,
+                            official_url,
+                            main_visual_path,
+                            main_visual_position_x,
+                            main_visual_position_y
+                        `)
+                        .eq('id', copyFrom)
+                        .single(),
+
+                    supabase
+                        .from('setlist_items')
+                        .select(
+                            'position, display_label, title, detail, note'
+                        )
+                        .eq('event_id', copyFrom)
+                        .order('position', {
+                            ascending: true,
+                        }),
+
+                    supabase
+                        .from('event_artists')
+                        .select('name, sort_order')
+                        .eq('event_id', copyFrom)
+                        .order('sort_order', {
+                            ascending: true,
+                        }),
+
+                    supabase
+                        .from('event_hashtags')
+                        .select('tag, sort_order')
+                        .eq('event_id', copyFrom)
+                        .order('sort_order', {
+                            ascending: true,
+                        }),
+                ])
+
+                if (cancelled) {
+                    return
+                }
+
+                if (
+                    eventResult.error ||
+                    !eventResult.data
+                ) {
+                    throw new Error(
+                        'コピー元のイベント情報を取得できませんでした。'
+                    )
+                }
+
+                if (setlistResult.error) {
+                    throw new Error(
+                        `SETLISTの取得に失敗しました：${setlistResult.error.message}`
+                    )
+                }
+
+                if (artistResult.error) {
+                    throw new Error(
+                        `ARTISTの取得に失敗しました：${artistResult.error.message}`
+                    )
+                }
+
+                if (hashtagResult.error) {
+                    throw new Error(
+                        `HASHTAGの取得に失敗しました：${hashtagResult.error.message}`
+                    )
+                }
+
+                const eventData =
+                    eventResult.data
+
+                let copiedMainVisual:
+                    File | null = null
+
+                if (eventData.main_visual_path) {
+                    const {
+                        data: mainVisualBlob,
+                        error: mainVisualError,
+                    } = await supabase.storage
+                        .from('event-images')
+                        .download(
+                            eventData.main_visual_path
+                        )
+
+                    if (cancelled) {
+                        return
+                    }
+
+                    if (
+                        mainVisualError ||
+                        !mainVisualBlob
+                    ) {
+                        throw new Error(
+                            `MAIN VISUALの取得に失敗しました：${mainVisualError?.message ?? '不明なエラー'}`
+                        )
+                    }
+
+                    copiedMainVisual =
+                        new File(
+                            [mainVisualBlob],
+                            'main-visual.webp',
+                            {
+                                type:
+                                    mainVisualBlob.type ||
+                                    'image/webp',
+                            }
+                        )
+                }
+
+                if (cancelled) {
+                    return
+                }
+
+                setEventDate(
+                    eventData.event_date ?? ''
+                )
+                setTitle(
+                    eventData.title ?? ''
+                )
+
+                setMainVisual(copiedMainVisual)
+                setMainVisualPositionX(
+                    eventData
+                        .main_visual_position_x ??
+                    50
+                )
+                setMainVisualPositionY(
+                    eventData
+                        .main_visual_position_y ??
+                    50
+                )
+
+                // 座席情報はコピーしない
+                setSeatBlockRow('')
+                setSeatNumber('')
+
+                setVenue(
+                    eventData.venue ?? ''
+                )
+                setDoorsTime(
+                    eventData.doors_time
+                        ? eventData.doors_time.slice(
+                            0,
+                            5
+                        )
+                        : ''
+                )
+                setStartTime(
+                    eventData.start_time
+                        ? eventData.start_time.slice(
+                            0,
+                            5
+                        )
+                        : ''
+                )
+                setTicketPrice(
+                    eventData.ticket_price ?? ''
+                )
+                setMemo(
+                    eventData.memo ?? ''
+                )
+                setOfficialUrl(
+                    eventData.official_url ?? ''
+                )
+
+                setSetlistItems(
+                    (setlistResult.data ?? []).map(
+                        (item) => ({
+                            id: crypto.randomUUID(),
+                            displayLabel:
+                                item.display_label ?? '',
+                            title:
+                                item.title ?? '',
+                            detail:
+                                item.detail ?? '',
+                            note:
+                                item.note ?? '',
+                        })
+                    )
+                )
+
+                setArtists(
+                    (artistResult.data ?? []).map(
+                        (item) => item.name
+                    )
+                )
+
+                setHashtags(
+                    (hashtagResult.data ?? []).map(
+                        (item) => item.tag
+                    )
+                )
+
+                // PHOTOはコピーしない
+                setOfficialPhotos([])
+                setPersonalPhotos([])
+            } catch (error) {
+                if (cancelled) {
+                    return
+                }
+
+                setErrorMessage(
+                    error instanceof Error
+                        ? error.message
+                        : 'コピー元の読み込みに失敗しました。'
+                )
+            } finally {
+                if (!cancelled) {
+                    setCopyLoading(false)
+                }
+            }
+        }
+
+        void loadCopySource()
+
+        return () => {
+            cancelled = true
+        }
+    }, [copyFrom, supabase])
 
     const isDirty = useMemo(() => {
         return (
@@ -355,23 +617,80 @@ function NewEventPageContent() {
         }
     }
 
+
+    function movePhoto(
+        photoType: PhotoType,
+        photoId: string,
+        direction: -1 | 1
+    ) {
+        const move = (
+            current: PhotoItem[]
+        ) => {
+            const index = current.findIndex(
+                (photo) => photo.id === photoId
+            )
+
+            const nextIndex =
+                index + direction
+
+            if (
+                index < 0 ||
+                nextIndex < 0 ||
+                nextIndex >= current.length
+            ) {
+                return current
+            }
+
+            const updated = [...current]
+
+                ;[
+                    updated[index],
+                    updated[nextIndex],
+                ] = [
+                        updated[nextIndex],
+                        updated[index],
+                    ]
+
+            return updated
+        }
+
+        if (photoType === 'official') {
+            setOfficialPhotos(move)
+        } else {
+            setPersonalPhotos(move)
+        }
+    }
+
     function addArtist() {
-        const value = artistInput.trim()
+        const values =
+            artistInput
+                .split(/\r?\n/)
+                .map((value) => value.trim())
+                .filter((value) => value !== '')
 
-        if (!value) {
+        if (values.length === 0) {
             return
         }
 
-        const alreadyExists = artists.some(
-            (artist) => artist.toLowerCase() === value.toLowerCase()
-        )
+        setArtists((current) => {
+            const result = [...current]
 
-        if (alreadyExists) {
-            setArtistInput('')
-            return
-        }
+            for (const value of values) {
+                const alreadyExists =
+                    result.some(
+                        (artist) =>
+                            artist.toLowerCase() ===
+                            value.toLowerCase()
+                    )
 
-        setArtists((current) => [...current, value])
+                if (!alreadyExists) {
+                    result.push(value)
+                }
+            }
+
+            return result
+        })
+
         setArtistInput('')
     }
 
@@ -749,7 +1068,9 @@ function NewEventPageContent() {
             }
 
             router.replace(
-                `/events/${createdEventId}?returnTo=${encodeURIComponent(returnTo)}`
+                `/events/${createdEventId}?returnTo=${encodeURIComponent(
+                    afterSaveReturnTo
+                )}`
             )
         } catch (error) {
             await rollbackNewEvent()
@@ -783,6 +1104,16 @@ function NewEventPageContent() {
         } catch {
             return url
         }
+    }
+
+    if (copyLoading) {
+        return (
+            <main
+                className={`${styles.page} ${styles.pageEdit}`}
+            >
+                <p>イベント情報をコピーしています...</p>
+            </main>
+        )
     }
 
     return (
@@ -1093,7 +1424,7 @@ function NewEventPageContent() {
 
                             <div className={styles.photoTrack}>
                                 {officialPhotos.map(
-                                    (photo) => (
+                                    (photo, index) => (
                                         <div
                                             key={photo.id}
                                             className={
@@ -1123,6 +1454,60 @@ function NewEventPageContent() {
                                             >
                                                 ×
                                             </button>
+
+                                            <div
+                                                className={
+                                                    styles.photoMoveControls
+                                                }
+                                            >
+                                                <button
+                                                    type="button"
+                                                    className={
+                                                        styles.photoMoveButton
+                                                    }
+                                                    onClick={() =>
+                                                        movePhoto(
+                                                            'official',
+                                                            photo.id,
+                                                            -1
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        index === 0
+                                                    }
+                                                    aria-label="左へ移動"
+                                                >
+                                                    <ChevronLeft
+                                                        size={16}
+                                                        strokeWidth={2}
+                                                    />
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    className={
+                                                        styles.photoMoveButton
+                                                    }
+                                                    onClick={() =>
+                                                        movePhoto(
+                                                            'official',
+                                                            photo.id,
+                                                            1
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        index ===
+                                                        officialPhotos.length -
+                                                        1
+                                                    }
+                                                    aria-label="右へ移動"
+                                                >
+                                                    <ChevronRight
+                                                        size={16}
+                                                        strokeWidth={2}
+                                                    />
+                                                </button>
+                                            </div>
                                         </div>
                                     )
                                 )}
@@ -1158,7 +1543,7 @@ function NewEventPageContent() {
 
                             <div className={styles.photoTrack}>
                                 {personalPhotos.map(
-                                    (photo) => (
+                                    (photo, index) => (
                                         <div
                                             key={photo.id}
                                             className={
@@ -1188,6 +1573,60 @@ function NewEventPageContent() {
                                             >
                                                 ×
                                             </button>
+
+                                            <div
+                                                className={
+                                                    styles.photoMoveControls
+                                                }
+                                            >
+                                                <button
+                                                    type="button"
+                                                    className={
+                                                        styles.photoMoveButton
+                                                    }
+                                                    onClick={() =>
+                                                        movePhoto(
+                                                            'personal',
+                                                            photo.id,
+                                                            -1
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        index === 0
+                                                    }
+                                                    aria-label="左へ移動"
+                                                >
+                                                    <ChevronLeft
+                                                        size={16}
+                                                        strokeWidth={2}
+                                                    />
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    className={
+                                                        styles.photoMoveButton
+                                                    }
+                                                    onClick={() =>
+                                                        movePhoto(
+                                                            'personal',
+                                                            photo.id,
+                                                            1
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        index ===
+                                                        personalPhotos.length -
+                                                        1
+                                                    }
+                                                    aria-label="右へ移動"
+                                                >
+                                                    <ChevronRight
+                                                        size={16}
+                                                        strokeWidth={2}
+                                                    />
+                                                </button>
+                                            </div>
                                         </div>
                                     )
                                 )}
@@ -1458,21 +1897,13 @@ function NewEventPageContent() {
                         </div>
 
                         <div className={styles.artistEditor}>
-                            <input
-                                type="text"
-                                placeholder="出演者"
+                            <textarea
+                                placeholder="出演者（1行につき1名）"
                                 value={artistInput}
                                 onChange={(event) =>
-                                    setArtistInput(
-                                        event.target.value
-                                    )
+                                    setArtistInput(event.target.value)
                                 }
-                                onKeyDown={(event) => {
-                                    if (event.key === 'Enter') {
-                                        event.preventDefault()
-                                        addArtist()
-                                    }
-                                }}
+                                rows={1}
                                 className={styles.artistInput}
                             />
 

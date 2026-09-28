@@ -11,7 +11,7 @@ import {
 import { useParams, useRouter, useSearchParams, } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { compressImage } from '@/lib/image/compress'
-import { ChevronLeft, Pencil, Save } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Copy, Pencil, Save, Undo2 } from 'lucide-react'
 import styles from '../EventForm.module.css'
 import MainVisualFrame from '@/components/MainVisualFrame'
 import ImageViewer from '@/components/ImageViewer'
@@ -47,6 +47,12 @@ type NewPhoto = {
     id: string
     file: File
     previewUrl: string
+}
+
+type EditablePhoto = {
+    id: string
+    previewUrl: string
+    isNew: boolean
 }
 
 type EditSnapshot = {
@@ -152,12 +158,144 @@ export default function EventPage() {
         useState<string[]>([])
 
     const [
+        officialPhotoOrder,
+        setOfficialPhotoOrder,
+    ] = useState<string[]>([])
+
+    const [
+        personalPhotoOrder,
+        setPersonalPhotoOrder,
+    ] = useState<string[]>([])
+
+    const [
         viewerPhoto,
         setViewerPhoto,
     ] = useState<{
-        src: string
-        alt: string
+        type: 'official' | 'personal'
+        index: number
     } | null>(null)
+
+    const viewerPhotos =
+        viewerPhoto?.type === 'official'
+            ? officialPhotos
+            : viewerPhoto?.type === 'personal'
+                ? personalPhotos
+                : []
+
+    const currentViewerPhoto =
+        viewerPhoto
+            ? viewerPhotos[viewerPhoto.index]
+            : null
+
+    const editableOfficialPhotos =
+        useMemo<EditablePhoto[]>(
+            () =>
+                officialPhotoOrder.flatMap<EditablePhoto>(
+                    (id): EditablePhoto[] => {
+                        const existingPhoto =
+                            officialPhotos.find(
+                                (photo) =>
+                                    photo.id === id
+                            )
+
+                        if (
+                            existingPhoto &&
+                            !deletedPhotoIds.includes(
+                                existingPhoto.id
+                            )
+                        ) {
+                            return [
+                                {
+                                    id,
+                                    previewUrl:
+                                        existingPhoto.previewUrl,
+                                    isNew: false,
+                                },
+                            ]
+                        }
+
+                        const newPhoto =
+                            newOfficialPhotos.find(
+                                (photo) =>
+                                    photo.id === id
+                            )
+
+                        if (newPhoto) {
+                            return [
+                                {
+                                    id,
+                                    previewUrl:
+                                        newPhoto.previewUrl,
+                                    isNew: true,
+                                },
+                            ]
+                        }
+
+                        return []
+                    }
+                ),
+            [
+                officialPhotoOrder,
+                officialPhotos,
+                newOfficialPhotos,
+                deletedPhotoIds,
+            ]
+        )
+
+    const editablePersonalPhotos =
+        useMemo<EditablePhoto[]>(
+            () =>
+                personalPhotoOrder.flatMap<EditablePhoto>(
+                    (id): EditablePhoto[] => {
+                        const existingPhoto =
+                            personalPhotos.find(
+                                (photo) =>
+                                    photo.id === id
+                            )
+
+                        if (
+                            existingPhoto &&
+                            !deletedPhotoIds.includes(
+                                existingPhoto.id
+                            )
+                        ) {
+                            return [
+                                {
+                                    id,
+                                    previewUrl:
+                                        existingPhoto.previewUrl,
+                                    isNew: false,
+                                },
+                            ]
+                        }
+
+                        const newPhoto =
+                            newPersonalPhotos.find(
+                                (photo) =>
+                                    photo.id === id
+                            )
+
+                        if (newPhoto) {
+                            return [
+                                {
+                                    id,
+                                    previewUrl:
+                                        newPhoto.previewUrl,
+                                    isNew: true,
+                                },
+                            ]
+                        }
+
+                        return []
+                    }
+                ),
+            [
+                personalPhotoOrder,
+                personalPhotos,
+                newPersonalPhotos,
+                deletedPhotoIds,
+            ]
+        )
 
     const [seatBlockRow, setSeatBlockRow] = useState('')
     const [seatNumber, setSeatNumber] = useState('')
@@ -191,6 +329,11 @@ export default function EventPage() {
     const [
         showBackConfirmDialog,
         setShowBackConfirmDialog,
+    ] = useState(false)
+
+    const [
+        showCancelEditConfirmDialog,
+        setShowCancelEditConfirmDialog,
     ] = useState(false)
 
     useEffect(() => {
@@ -739,18 +882,79 @@ export default function EventPage() {
             JSON.stringify(currentSnapshot) !==
             JSON.stringify(initialSnapshot)
 
+        const currentOfficialExistingOrder =
+            officialPhotoOrder.filter(
+                (id) =>
+                    officialPhotos.some(
+                        (photo) =>
+                            photo.id === id &&
+                            !deletedPhotoIds.includes(
+                                photo.id
+                            )
+                    )
+            )
+
+        const currentPersonalExistingOrder =
+            personalPhotoOrder.filter(
+                (id) =>
+                    personalPhotos.some(
+                        (photo) =>
+                            photo.id === id &&
+                            !deletedPhotoIds.includes(
+                                photo.id
+                            )
+                    )
+            )
+
+        const originalOfficialExistingOrder =
+            officialPhotos
+                .filter(
+                    (photo) =>
+                        !deletedPhotoIds.includes(
+                            photo.id
+                        )
+                )
+                .map((photo) => photo.id)
+
+        const originalPersonalExistingOrder =
+            personalPhotos
+                .filter(
+                    (photo) =>
+                        !deletedPhotoIds.includes(
+                            photo.id
+                        )
+                )
+                .map((photo) => photo.id)
+
+        const photoOrderChanged =
+            JSON.stringify(
+                currentOfficialExistingOrder
+            ) !==
+            JSON.stringify(
+                originalOfficialExistingOrder
+            ) ||
+            JSON.stringify(
+                currentPersonalExistingOrder
+            ) !==
+            JSON.stringify(
+                originalPersonalExistingOrder
+            )
+
         const imageChanged =
             newMainVisual !== null ||
             removeMainVisual ||
             newOfficialPhotos.length > 0 ||
             newPersonalPhotos.length > 0 ||
-            deletedPhotoIds.length > 0
+            deletedPhotoIds.length > 0 ||
+            photoOrderChanged
 
         return textOrListChanged || imageChanged
     }, [
         initialSnapshot,
         eventDate,
         title,
+        mainVisualPositionX,
+        mainVisualPositionY,
         seatBlockRow,
         seatNumber,
         venue,
@@ -767,6 +971,10 @@ export default function EventPage() {
         newOfficialPhotos,
         newPersonalPhotos,
         deletedPhotoIds,
+        officialPhotoOrder,
+        personalPhotoOrder,
+        officialPhotos,
+        personalPhotos,
     ])
 
     usePageDirty(
@@ -828,6 +1036,28 @@ export default function EventPage() {
             observer.disconnect()
         }
     }, [isEditing, title])
+
+    useEffect(() => {
+        if (isEditing) {
+            return
+        }
+
+        setOfficialPhotoOrder(
+            officialPhotos.map(
+                (photo) => photo.id
+            )
+        )
+
+        setPersonalPhotoOrder(
+            personalPhotos.map(
+                (photo) => photo.id
+            )
+        )
+    }, [
+        officialPhotos,
+        personalPhotos,
+        isEditing,
+    ])
 
     useEffect(() => {
         function handleBeforeUnload(
@@ -965,26 +1195,34 @@ export default function EventPage() {
     }
 
     function addArtist() {
-        const value = artistInput.trim()
+        const values =
+            artistInput
+                .split(/\r?\n/)
+                .map((value) => value.trim())
+                .filter((value) => value !== '')
 
-        if (!value) {
+        if (values.length === 0) {
             return
         }
 
-        const alreadyExists = artists.some(
-            (artist) =>
-                artist.toLowerCase() === value.toLowerCase()
-        )
+        setArtists((current) => {
+            const result = [...current]
 
-        if (alreadyExists) {
-            setArtistInput('')
-            return
-        }
+            for (const value of values) {
+                const alreadyExists =
+                    result.some(
+                        (artist) =>
+                            artist.toLowerCase() ===
+                            value.toLowerCase()
+                    )
 
-        setArtists((current) => [
-            ...current,
-            value,
-        ])
+                if (!alreadyExists) {
+                    result.push(value)
+                }
+            }
+
+            return result
+        })
 
         setArtistInput('')
     }
@@ -1152,11 +1390,29 @@ export default function EventPage() {
                         ...addedPhotos,
                     ]
                 )
+
+                setOfficialPhotoOrder(
+                    (current) => [
+                        ...current,
+                        ...addedPhotos.map(
+                            (photo) => photo.id
+                        ),
+                    ]
+                )
             } else {
                 setNewPersonalPhotos(
                     (current) => [
                         ...current,
                         ...addedPhotos,
+                    ]
+                )
+
+                setPersonalPhotoOrder(
+                    (current) => [
+                        ...current,
+                        ...addedPhotos.map(
+                            (photo) => photo.id
+                        ),
                     ]
                 )
             }
@@ -1171,11 +1427,33 @@ export default function EventPage() {
 
     function deleteExistingPhoto(id: string) {
         setDeletedPhotoIds(
-            (current) => [
-                ...current,
-                id,
-            ]
+            (current) =>
+                current.includes(id)
+                    ? current
+                    : [...current, id]
         )
+
+        if (
+            officialPhotos.some(
+                (photo) => photo.id === id
+            )
+        ) {
+            setOfficialPhotoOrder(
+                (current) =>
+                    current.filter(
+                        (photoId) =>
+                            photoId !== id
+                    )
+            )
+        } else {
+            setPersonalPhotoOrder(
+                (current) =>
+                    current.filter(
+                        (photoId) =>
+                            photoId !== id
+                    )
+            )
+        }
     }
 
     function deleteNewPhoto(
@@ -1187,7 +1465,8 @@ export default function EventPage() {
                 (current) => {
                     const target =
                         current.find(
-                            (photo) => photo.id === id
+                            (photo) =>
+                                photo.id === id
                         )
 
                     if (target) {
@@ -1201,13 +1480,22 @@ export default function EventPage() {
                             photo.id !== id
                     )
                 }
+            )
+
+            setOfficialPhotoOrder(
+                (current) =>
+                    current.filter(
+                        (photoId) =>
+                            photoId !== id
+                    )
             )
         } else {
             setNewPersonalPhotos(
                 (current) => {
                     const target =
                         current.find(
-                            (photo) => photo.id === id
+                            (photo) =>
+                                photo.id === id
                         )
 
                     if (target) {
@@ -1222,6 +1510,56 @@ export default function EventPage() {
                     )
                 }
             )
+
+            setPersonalPhotoOrder(
+                (current) =>
+                    current.filter(
+                        (photoId) =>
+                            photoId !== id
+                    )
+            )
+        }
+    }
+
+    function movePhoto(
+        type: 'official' | 'personal',
+        id: string,
+        direction: -1 | 1
+    ) {
+        const move = (
+            current: string[]
+        ) => {
+            const index =
+                current.indexOf(id)
+
+            const nextIndex =
+                index + direction
+
+            if (
+                index < 0 ||
+                nextIndex < 0 ||
+                nextIndex >= current.length
+            ) {
+                return current
+            }
+
+            const next = [...current]
+
+                ;[
+                    next[index],
+                    next[nextIndex],
+                ] = [
+                        next[nextIndex],
+                        next[index],
+                    ]
+
+            return next
+        }
+
+        if (type === 'official') {
+            setOfficialPhotoOrder(move)
+        } else {
+            setPersonalPhotoOrder(move)
         }
     }
 
@@ -1377,8 +1715,8 @@ export default function EventPage() {
         }
 
         /*
- * PHOTO
- */
+         * PHOTO
+         */
 
         const remainingOfficialPhotos =
             officialPhotos.filter(
@@ -1396,50 +1734,15 @@ export default function EventPage() {
                     )
             )
 
-        /*
-         * 残す既存画像の並び順を整理
-         */
-
-        for (
-            let index = 0;
-            index <
-            remainingOfficialPhotos.length;
-            index++
-        ) {
-            await supabase
-                .from('event_photos')
-                .update({
-                    sort_order: index,
-                })
-                .eq(
-                    'id',
-                    remainingOfficialPhotos[
-                        index
-                    ].id
-                )
-        }
-
-        for (
-            let index = 0;
-            index <
-            remainingPersonalPhotos.length;
-            index++
-        ) {
-            await supabase
-                .from('event_photos')
-                .update({
-                    sort_order: index,
-                })
-                .eq(
-                    'id',
-                    remainingPersonalPhotos[
-                        index
-                    ].id
-                )
-        }
+        const photosToDelete = [
+            ...officialPhotos,
+            ...personalPhotos,
+        ].filter((photo) =>
+            deletedPhotoIds.includes(photo.id)
+        )
 
         /*
-         * 新しい画像をアップロード
+         * 新しい画像をStorageへアップロード
          */
 
         const uploadedPhotoPaths: string[] =
@@ -1498,13 +1801,20 @@ export default function EventPage() {
                 storagePath
             )
 
+            const orderedIndex =
+                officialPhotoOrder.indexOf(
+                    photo.id
+                )
+
             newPhotoRows.push({
                 event_id: eventId,
                 photo_type: 'official',
                 storage_path: storagePath,
                 sort_order:
-                    remainingOfficialPhotos.length +
-                    index,
+                    orderedIndex >= 0
+                        ? orderedIndex
+                        : remainingOfficialPhotos.length +
+                        index,
             })
         }
 
@@ -1554,14 +1864,182 @@ export default function EventPage() {
                 storagePath
             )
 
+            const orderedIndex =
+                personalPhotoOrder.indexOf(
+                    photo.id
+                )
+
             newPhotoRows.push({
                 event_id: eventId,
                 photo_type: 'personal',
                 storage_path: storagePath,
                 sort_order:
-                    remainingPersonalPhotos.length +
-                    index,
+                    orderedIndex >= 0
+                        ? orderedIndex
+                        : remainingPersonalPhotos.length +
+                        index,
             })
+        }
+
+        /*
+         * 追加前に削除予定PHOTOをDBから削除
+         */
+
+        if (photosToDelete.length > 0) {
+            const { error: photoDeleteError } =
+                await supabase
+                    .from('event_photos')
+                    .delete()
+                    .in(
+                        'id',
+                        photosToDelete.map(
+                            (photo) => photo.id
+                        )
+                    )
+
+            if (photoDeleteError) {
+                if (
+                    uploadedPhotoPaths.length > 0
+                ) {
+                    await supabase.storage
+                        .from('event-images')
+                        .remove(
+                            uploadedPhotoPaths
+                        )
+                }
+
+                setErrorMessage(
+                    `PHOTOの削除に失敗しました：${photoDeleteError.message}`
+                )
+                setSaving(false)
+                return
+            }
+        }
+
+        const restoreDeletedPhotoRows =
+            async () => {
+                if (
+                    photosToDelete.length === 0
+                ) {
+                    return
+                }
+
+                await supabase
+                    .from('event_photos')
+                    .insert(
+                        photosToDelete.map(
+                            (photo) => ({
+                                id: photo.id,
+                                event_id: eventId,
+                                photo_type:
+                                    photo.photo_type,
+                                storage_path:
+                                    photo.storage_path,
+                                sort_order:
+                                    photo.sort_order,
+                            })
+                        )
+                    )
+            }
+
+        /*
+         * 残す既存PHOTOの並び順を更新
+         */
+
+        for (
+            const photo of
+            remainingOfficialPhotos
+        ) {
+            const sortOrder =
+                officialPhotoOrder.indexOf(
+                    photo.id
+                )
+
+            if (sortOrder < 0) {
+                continue
+            }
+
+            const {
+                error: photoOrderError,
+            } =
+                await supabase
+                    .from('event_photos')
+                    .update({
+                        sort_order:
+                            sortOrder,
+                    })
+                    .eq(
+                        'id',
+                        photo.id
+                    )
+
+            if (photoOrderError) {
+                await restoreDeletedPhotoRows()
+
+                if (
+                    uploadedPhotoPaths.length > 0
+                ) {
+                    await supabase.storage
+                        .from('event-images')
+                        .remove(
+                            uploadedPhotoPaths
+                        )
+                }
+
+                setErrorMessage(
+                    `PHOTOの並び順の保存に失敗しました：${photoOrderError.message}`
+                )
+                setSaving(false)
+                return
+            }
+        }
+
+        for (
+            const photo of
+            remainingPersonalPhotos
+        ) {
+            const sortOrder =
+                personalPhotoOrder.indexOf(
+                    photo.id
+                )
+
+            if (sortOrder < 0) {
+                continue
+            }
+
+            const {
+                error: photoOrderError,
+            } =
+                await supabase
+                    .from('event_photos')
+                    .update({
+                        sort_order:
+                            sortOrder,
+                    })
+                    .eq(
+                        'id',
+                        photo.id
+                    )
+
+            if (photoOrderError) {
+                await restoreDeletedPhotoRows()
+
+                if (
+                    uploadedPhotoPaths.length > 0
+                ) {
+                    await supabase.storage
+                        .from('event-images')
+                        .remove(
+                            uploadedPhotoPaths
+                        )
+                }
+
+                setErrorMessage(
+                    `PHOTOの並び順の保存に失敗しました：${photoOrderError.message}`
+                )
+                setSaving(false)
+                return
+            }
         }
 
         /*
@@ -1575,6 +2053,8 @@ export default function EventPage() {
                     .insert(newPhotoRows)
 
             if (photoInsertError) {
+                await restoreDeletedPhotoRows()
+
                 if (
                     uploadedPhotoPaths.length > 0
                 ) {
@@ -1594,36 +2074,10 @@ export default function EventPage() {
         }
 
         /*
-         * 削除予定の既存PHOTOを削除
+         * DB更新成功後、削除PHOTOのStorageを整理
          */
 
-        const photosToDelete = [
-            ...officialPhotos,
-            ...personalPhotos,
-        ].filter((photo) =>
-            deletedPhotoIds.includes(photo.id)
-        )
-
         if (photosToDelete.length > 0) {
-            const { error: photoDeleteError } =
-                await supabase
-                    .from('event_photos')
-                    .delete()
-                    .in(
-                        'id',
-                        photosToDelete.map(
-                            (photo) => photo.id
-                        )
-                    )
-
-            if (photoDeleteError) {
-                setErrorMessage(
-                    `PHOTOの削除に失敗しました：${photoDeleteError.message}`
-                )
-                setSaving(false)
-                return
-            }
-
             const pathsToDelete =
                 photosToDelete.map(
                     (photo) =>
@@ -1786,6 +2240,44 @@ export default function EventPage() {
 
         setReloadKey((current) => current + 1)
 
+    }
+
+    function discardEdit() {
+        newOfficialPhotos.forEach((photo) => {
+            URL.revokeObjectURL(photo.previewUrl)
+        })
+
+        newPersonalPhotos.forEach((photo) => {
+            URL.revokeObjectURL(photo.previewUrl)
+        })
+
+        setNewMainVisual(null)
+        setNewMainVisualPreviewUrl(null)
+        setNewMainVisualPositionX(50)
+        setNewMainVisualPositionY(50)
+        setRemoveMainVisual(false)
+
+        setNewOfficialPhotos([])
+        setNewPersonalPhotos([])
+        setDeletedPhotoIds([])
+
+        setArtistInput('')
+        setHashtagInput('')
+        setErrorMessage('')
+
+        setIsEditing(false)
+        setReloadKey((current) => current + 1)
+    }
+
+    function handleCopy() {
+        const sourceDetailUrl =
+            `/events/${eventId}?returnTo=${encodeURIComponent(returnTo)}`
+
+        router.push(
+            `/events/new?copyFrom=${encodeURIComponent(eventId)}` +
+            `&returnTo=${encodeURIComponent(sourceDetailUrl)}` +
+            `&afterSaveReturnTo=${encodeURIComponent(returnTo)}`
+        )
     }
 
     function goBack() {
@@ -1962,35 +2454,78 @@ export default function EventPage() {
                     </h1>
 
                     {isEditing ? (
-                        <button
-                            type="submit"
-                            form="event-form"
-                            aria-label="保存"
-                            title="保存"
-                            className={styles.saveButton}
-                            disabled={saving}
-                        >
-                            <Save
-                                size={27}
-                                strokeWidth={2}
-                            />
-                        </button>
+                        <div className={styles.headerActions}>
+                            <button
+                                type="button"
+                                aria-label="編集を取り消し"
+                                title="編集を取り消し"
+                                className={styles.saveButton}
+                                disabled={saving}
+                                onClick={(event) => {
+                                    event.preventDefault()
+
+                                    if (!isDirty) {
+                                        setIsEditing(false)
+                                        return
+                                    }
+
+                                    setShowCancelEditConfirmDialog(true)
+                                }}
+                            >
+                                <Undo2
+                                    size={24}
+                                    strokeWidth={2}
+                                />
+                            </button>
+
+                            <button
+                                type="submit"
+                                form="event-form"
+                                aria-label="保存"
+                                title="保存"
+                                className={styles.saveButton}
+                                disabled={saving}
+                            >
+                                <Save
+                                    size={27}
+                                    strokeWidth={2}
+                                />
+                            </button>
+                        </div>
                     ) : (
-                        <button
-                            type="button"
-                            aria-label="編集"
-                            title="編集"
-                            className={styles.saveButton}
-                            onClick={(event) => {
-                                event.preventDefault()
-                                setIsEditing(true)
-                            }}
-                        >
-                            <Pencil
-                                size={24}
-                                strokeWidth={2}
-                            />
-                        </button>
+                        <div className={styles.headerActions}>
+                            <button
+                                type="button"
+                                aria-label="コピー"
+                                title="コピー"
+                                className={styles.saveButton}
+                                onClick={(event) => {
+                                    event.preventDefault()
+                                    handleCopy()
+                                }}
+                            >
+                                <Copy
+                                    size={23}
+                                    strokeWidth={2}
+                                />
+                            </button>
+
+                            <button
+                                type="button"
+                                aria-label="編集"
+                                title="編集"
+                                className={styles.saveButton}
+                                onClick={(event) => {
+                                    event.preventDefault()
+                                    setIsEditing(true)
+                                }}
+                            >
+                                <Pencil
+                                    size={24}
+                                    strokeWidth={2}
+                                />
+                            </button>
+                        </div>
                     )}
                 </AppHeaderPortal>
 
@@ -2518,25 +3053,13 @@ export default function EventPage() {
                                 <div className={styles.photoSection}>
                                     <h3 className={styles.photoLabel}>
                                         OFFICIAL PHOTOS (
-                                        {officialPhotos.filter(
-                                            (photo) =>
-                                                !deletedPhotoIds.includes(
-                                                    photo.id
-                                                )
-                                        ).length +
-                                            newOfficialPhotos.length}
+                                        {editableOfficialPhotos.length}
                                         /20)
                                     </h3>
 
                                     <div className={styles.photoTrack}>
-                                        {officialPhotos
-                                            .filter(
-                                                (photo) =>
-                                                    !deletedPhotoIds.includes(
-                                                        photo.id
-                                                    )
-                                            )
-                                            .map((photo) => (
+                                        {editableOfficialPhotos.map(
+                                            (photo, index) => (
                                                 <div
                                                     key={photo.id}
                                                     className={
@@ -2545,7 +3068,11 @@ export default function EventPage() {
                                                 >
                                                     <img
                                                         src={photo.previewUrl}
-                                                        alt="OFFICIAL PHOTO"
+                                                        alt={
+                                                            photo.isNew
+                                                                ? 'NEW OFFICIAL PHOTO'
+                                                                : 'OFFICIAL PHOTO'
+                                                        }
                                                         className={
                                                             styles.photoThumb
                                                         }
@@ -2557,59 +3084,78 @@ export default function EventPage() {
                                                             styles.photoDelete
                                                         }
                                                         onClick={() =>
-                                                            deleteExistingPhoto(
-                                                                photo.id
-                                                            )
+                                                            photo.isNew
+                                                                ? deleteNewPhoto(
+                                                                    photo.id,
+                                                                    'official'
+                                                                )
+                                                                : deleteExistingPhoto(
+                                                                    photo.id
+                                                                )
                                                         }
                                                         aria-label="画像を削除"
                                                     >
                                                         ×
                                                     </button>
-                                                </div>
-                                            ))}
 
-                                        {newOfficialPhotos.map(
-                                            (photo) => (
-                                                <div
-                                                    key={photo.id}
-                                                    className={
-                                                        styles.photoItem
-                                                    }
-                                                >
-                                                    <img
-                                                        src={photo.previewUrl}
-                                                        alt="NEW OFFICIAL PHOTO"
+                                                    <div
                                                         className={
-                                                            styles.photoThumb
+                                                            styles.photoMoveControls
                                                         }
-                                                    />
-
-                                                    <button
-                                                        type="button"
-                                                        className={
-                                                            styles.photoDelete
-                                                        }
-                                                        onClick={() =>
-                                                            deleteNewPhoto(
-                                                                photo.id,
-                                                                'official'
-                                                            )
-                                                        }
-                                                        aria-label="画像を削除"
                                                     >
-                                                        ×
-                                                    </button>
+                                                        <button
+                                                            type="button"
+                                                            className={
+                                                                styles.photoMoveButton
+                                                            }
+                                                            onClick={() =>
+                                                                movePhoto(
+                                                                    'official',
+                                                                    photo.id,
+                                                                    -1
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                index === 0
+                                                            }
+                                                            aria-label="左へ移動"
+                                                        >
+                                                            <ChevronLeft
+                                                                size={16}
+                                                                strokeWidth={2}
+                                                            />
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            className={
+                                                                styles.photoMoveButton
+                                                            }
+                                                            onClick={() =>
+                                                                movePhoto(
+                                                                    'official',
+                                                                    photo.id,
+                                                                    1
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                index ===
+                                                                editableOfficialPhotos.length -
+                                                                1
+                                                            }
+                                                            aria-label="右へ移動"
+                                                        >
+                                                            <ChevronRight
+                                                                size={16}
+                                                                strokeWidth={2}
+                                                            />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )
                                         )}
 
-                                        {officialPhotos.filter(
-                                            (photo) =>
-                                                !deletedPhotoIds.includes(
-                                                    photo.id
-                                                )
-                                        ).length +
-                                            newOfficialPhotos.length <
+                                        {editableOfficialPhotos.length <
                                             20 && (
                                                 <label
                                                     className={
@@ -2638,25 +3184,13 @@ export default function EventPage() {
                                 <div className={styles.photoSection}>
                                     <h3 className={styles.photoLabel}>
                                         MY PHOTOS (
-                                        {personalPhotos.filter(
-                                            (photo) =>
-                                                !deletedPhotoIds.includes(
-                                                    photo.id
-                                                )
-                                        ).length +
-                                            newPersonalPhotos.length}
+                                        {editablePersonalPhotos.length}
                                         /5)
                                     </h3>
 
                                     <div className={styles.photoTrack}>
-                                        {personalPhotos
-                                            .filter(
-                                                (photo) =>
-                                                    !deletedPhotoIds.includes(
-                                                        photo.id
-                                                    )
-                                            )
-                                            .map((photo) => (
+                                        {editablePersonalPhotos.map(
+                                            (photo, index) => (
                                                 <div
                                                     key={photo.id}
                                                     className={
@@ -2665,7 +3199,11 @@ export default function EventPage() {
                                                 >
                                                     <img
                                                         src={photo.previewUrl}
-                                                        alt="MY PHOTO"
+                                                        alt={
+                                                            photo.isNew
+                                                                ? 'NEW MY PHOTO'
+                                                                : 'MY PHOTO'
+                                                        }
                                                         className={
                                                             styles.photoThumb
                                                         }
@@ -2677,59 +3215,78 @@ export default function EventPage() {
                                                             styles.photoDelete
                                                         }
                                                         onClick={() =>
-                                                            deleteExistingPhoto(
-                                                                photo.id
-                                                            )
+                                                            photo.isNew
+                                                                ? deleteNewPhoto(
+                                                                    photo.id,
+                                                                    'personal'
+                                                                )
+                                                                : deleteExistingPhoto(
+                                                                    photo.id
+                                                                )
                                                         }
                                                         aria-label="画像を削除"
                                                     >
                                                         ×
                                                     </button>
-                                                </div>
-                                            ))}
 
-                                        {newPersonalPhotos.map(
-                                            (photo) => (
-                                                <div
-                                                    key={photo.id}
-                                                    className={
-                                                        styles.photoItem
-                                                    }
-                                                >
-                                                    <img
-                                                        src={photo.previewUrl}
-                                                        alt="NEW MY PHOTO"
+                                                    <div
                                                         className={
-                                                            styles.photoThumb
+                                                            styles.photoMoveControls
                                                         }
-                                                    />
-
-                                                    <button
-                                                        type="button"
-                                                        className={
-                                                            styles.photoDelete
-                                                        }
-                                                        onClick={() =>
-                                                            deleteNewPhoto(
-                                                                photo.id,
-                                                                'personal'
-                                                            )
-                                                        }
-                                                        aria-label="画像を削除"
                                                     >
-                                                        ×
-                                                    </button>
+                                                        <button
+                                                            type="button"
+                                                            className={
+                                                                styles.photoMoveButton
+                                                            }
+                                                            onClick={() =>
+                                                                movePhoto(
+                                                                    'personal',
+                                                                    photo.id,
+                                                                    -1
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                index === 0
+                                                            }
+                                                            aria-label="左へ移動"
+                                                        >
+                                                            <ChevronLeft
+                                                                size={16}
+                                                                strokeWidth={2}
+                                                            />
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            className={
+                                                                styles.photoMoveButton
+                                                            }
+                                                            onClick={() =>
+                                                                movePhoto(
+                                                                    'personal',
+                                                                    photo.id,
+                                                                    1
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                index ===
+                                                                editablePersonalPhotos.length -
+                                                                1
+                                                            }
+                                                            aria-label="右へ移動"
+                                                        >
+                                                            <ChevronRight
+                                                                size={16}
+                                                                strokeWidth={2}
+                                                            />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )
                                         )}
 
-                                        {personalPhotos.filter(
-                                            (photo) =>
-                                                !deletedPhotoIds.includes(
-                                                    photo.id
-                                                )
-                                        ).length +
-                                            newPersonalPhotos.length <
+                                        {editablePersonalPhotos.length <
                                             5 && (
                                                 <label
                                                     className={
@@ -2779,7 +3336,7 @@ export default function EventPage() {
                                             }
                                         >
                                             {officialPhotos.map(
-                                                (photo) => (
+                                                (photo, index) => (
                                                     <div
                                                         key={photo.id}
                                                         className={
@@ -2793,8 +3350,8 @@ export default function EventPage() {
                                                             }
                                                             onClick={() =>
                                                                 setViewerPhoto({
-                                                                    src: photo.previewUrl,
-                                                                    alt: 'OFFICIAL PHOTO',
+                                                                    type: 'official',
+                                                                    index,
                                                                 })
                                                             }
                                                             aria-label="OFFICIAL PHOTOを拡大表示"
@@ -2838,7 +3395,7 @@ export default function EventPage() {
                                             }
                                         >
                                             {personalPhotos.map(
-                                                (photo) => (
+                                                (photo, index) => (
                                                     <div
                                                         key={photo.id}
                                                         className={
@@ -2852,8 +3409,8 @@ export default function EventPage() {
                                                             }
                                                             onClick={() =>
                                                                 setViewerPhoto({
-                                                                    src: photo.previewUrl,
-                                                                    alt: 'MY PHOTO',
+                                                                    type: 'personal',
+                                                                    index,
                                                                 })
                                                             }
                                                             aria-label="MY PHOTOを拡大表示"
@@ -3197,21 +3754,13 @@ export default function EventPage() {
                                 </div>
 
                                 <div className={styles.artistEditor}>
-                                    <input
-                                        type="text"
-                                        placeholder="出演者"
+                                    <textarea
+                                        placeholder="出演者（1行につき1名）"
                                         value={artistInput}
                                         onChange={(event) =>
-                                            setArtistInput(
-                                                event.target.value
-                                            )
+                                            setArtistInput(event.target.value)
                                         }
-                                        onKeyDown={(event) => {
-                                            if (event.key === 'Enter') {
-                                                event.preventDefault()
-                                                addArtist()
-                                            }
-                                        }}
+                                        rows={1}
                                         className={styles.artistInput}
                                     />
 
@@ -3338,15 +3887,58 @@ export default function EventPage() {
 
             </form>
 
-            {viewerPhoto && (
+            {viewerPhoto && currentViewerPhoto && (
                 <ImageViewer
-                    src={viewerPhoto.src}
-                    alt={viewerPhoto.alt}
+                    src={currentViewerPhoto.previewUrl}
+                    alt={
+                        viewerPhoto.type === 'official'
+                            ? 'OFFICIAL PHOTO'
+                            : 'MY PHOTO'
+                    }
                     onClose={() =>
                         setViewerPhoto(null)
                     }
+                    onPrevious={() =>
+                        setViewerPhoto((current) =>
+                            current
+                                ? {
+                                    ...current,
+                                    index: current.index - 1,
+                                }
+                                : null
+                        )
+                    }
+                    onNext={() =>
+                        setViewerPhoto((current) =>
+                            current
+                                ? {
+                                    ...current,
+                                    index: current.index + 1,
+                                }
+                                : null
+                        )
+                    }
+                    hasPrevious={
+                        viewerPhoto.index > 0
+                    }
+                    hasNext={
+                        viewerPhoto.index <
+                        viewerPhotos.length - 1
+                    }
                 />
             )}
+
+            <ConfirmDialog
+                open={showCancelEditConfirmDialog}
+                message="編集内容を破棄しますか？"
+                onCancel={() =>
+                    setShowCancelEditConfirmDialog(false)
+                }
+                onConfirm={() => {
+                    setShowCancelEditConfirmDialog(false)
+                    discardEdit()
+                }}
+            />
 
             <ConfirmDialog
                 open={showBackConfirmDialog}

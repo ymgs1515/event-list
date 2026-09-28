@@ -157,7 +157,7 @@ export default function DeleteEventButton({
                     strokeWidth={1.8}
                 />
 
-                <span>イベントを削除</span>
+                <span>このイベントを削除</span>
             </button>
 
             <ConfirmDialog

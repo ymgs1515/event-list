@@ -57,3 +57,40 @@
 
     cursor: pointer;
 }
+
+.navButton {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+    padding: 0;
+
+    color: #ffffff;
+
+    background: rgba(0, 0, 0, 0.13);
+    border: 0;
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    z-index: 510;
+}
+
+.previousButton {
+    left: 8px;
+}
+
+.nextButton {
+    right: 8px;
+}
+
+.navButton:disabled {
+    opacity: 0.2;
+    cursor: default;
+}
