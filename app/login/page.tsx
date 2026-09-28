@@ -61,9 +61,18 @@ export default function LoginPage() {
                     styles.loginArea
                 }
             >
-                <h1 className={styles.title}>
-                    推活ログ
-                </h1>
+                <div className={styles.brand}>
+                    <img
+                        src="/icons/icon-192.png"
+                        alt=""
+                        className={styles.appIcon}
+                        aria-hidden="true"
+                    />
+
+                    <h1 className={styles.title}>
+                        推活ログ
+                    </h1>
+                </div>
 
                 <form
                     onSubmit={handleLogin}
