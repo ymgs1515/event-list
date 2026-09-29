@@ -44,6 +44,51 @@ export default async function Home({
     )?.value,
   ].join('-')
 
+  const timeParts =
+    new Intl.DateTimeFormat(
+      'en-US',
+      {
+        timeZone: 'Asia/Tokyo',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      }
+    ).formatToParts(new Date())
+
+  const currentMinutes =
+    Number(
+      timeParts.find(
+        (part) => part.type === 'hour'
+      )?.value ?? '0'
+    ) * 60 +
+    Number(
+      timeParts.find(
+        (part) => part.type === 'minute'
+      )?.value ?? '0'
+    )
+
+  function getStartMinutes(
+    startTime: string | null
+  ) {
+    if (!startTime) {
+      return null
+    }
+
+    const [hour, minute] =
+      startTime.slice(0, 5)
+        .split(':')
+        .map(Number)
+
+    if (
+      !Number.isFinite(hour) ||
+      !Number.isFinite(minute)
+    ) {
+      return null
+    }
+
+    return hour * 60 + minute
+  }
+
   /*
    * Supabase / ログイン確認
    */
@@ -107,9 +152,11 @@ export default async function Home({
                 id,
                 event_date,
                 title,
+                subtitle,
                 venue,
                 seat_block_row,
                 seat_number,
+                seat_type,
                 doors_time,
                 main_visual_path,
                 main_visual_position_x,
@@ -207,7 +254,24 @@ export default async function Home({
    */
 
   const scheduledEvents =
-    events ?? []
+    (events ?? []).filter((event) => {
+      if (event.event_date > todayJst) {
+        return true
+      }
+
+      if (event.event_date < todayJst) {
+        return false
+      }
+
+      const startMinutes =
+        getStartMinutes(event.start_time)
+
+      if (startMinutes === null) {
+        return true
+      }
+
+      return startMinutes > currentMinutes
+    })
 
   const nextEvent =
     scheduledEvents[0] ??

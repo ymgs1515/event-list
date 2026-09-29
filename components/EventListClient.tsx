@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import {
     FormEvent,
@@ -51,9 +51,11 @@ type EventItem = {
     main_visual_position_x?: number | null
     main_visual_position_y?: number | null
     title: string
+    subtitle: string | null
     venue: string | null
     seat_block_row: string | null
     seat_number: string | null
+    seat_type: string | null
     start_time: string | null
     ticket_price: string | null
     memo: string | null
@@ -159,6 +161,36 @@ export default function EventListClient({
         restoreListPositionIfNeeded()
     }, [])
 
+    useEffect(() => {
+        const refreshCurrentState = () => {
+            router.refresh()
+        }
+
+        const intervalId = window.setInterval(
+            refreshCurrentState,
+            60 * 60 * 1000
+        )
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                refreshCurrentState()
+            }
+        }
+
+        document.addEventListener(
+            'visibilitychange',
+            handleVisibilityChange
+        )
+
+        return () => {
+            window.clearInterval(intervalId)
+            document.removeEventListener(
+                'visibilitychange',
+                handleVisibilityChange
+            )
+        }
+    }, [router])
+
     const [
         showFilter,
         setShowFilter,
@@ -188,13 +220,15 @@ export default function EventListClient({
         new Map<string, number>()
 
     for (const event of events) {
-        for (
-            const hashtag of
-            event.event_hashtags ?? []
-        ) {
+        const eventTags = new Set(
+            (event.event_hashtags ?? [])
+                .map((hashtag) => hashtag.tag)
+        )
+
+        for (const tag of eventTags) {
             tagCounts.set(
-                hashtag.tag,
-                (tagCounts.get(hashtag.tag) ?? 0) + 1
+                tag,
+                (tagCounts.get(tag) ?? 0) + 1
             )
         }
     }
@@ -353,9 +387,11 @@ export default function EventListClient({
             [
                 dateText,
                 event.title,
+                event.subtitle ?? '',
                 event.venue ?? '',
                 event.seat_block_row ?? '',
                 event.seat_number ?? '',
+                event.seat_type ?? '',
                 event.ticket_price ?? '',
                 event.memo ?? '',
                 artists,
@@ -1081,12 +1117,23 @@ export default function EventListClient({
                                                             }
                                                         >
                                                             {(event.venue ||
+                                                                event.subtitle ||
                                                                 artists.length > 0) && (
                                                                     <div
                                                                         className={
                                                                             styles.eventDetails
                                                                         }
                                                                     >
+                                                                        {event.subtitle && (
+                                                                            <div
+                                                                                className={
+                                                                                    styles.eventSubtitleCard
+                                                                                }
+                                                                            >
+                                                                                {event.subtitle}
+                                                                            </div>
+                                                                        )}
+
                                                                         {event.venue && (
                                                                             <div
                                                                                 className={

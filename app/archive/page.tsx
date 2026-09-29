@@ -44,6 +44,51 @@ export default async function Archive({
         )?.value,
     ].join('-')
 
+    const timeParts =
+        new Intl.DateTimeFormat(
+            'en-US',
+            {
+                timeZone: 'Asia/Tokyo',
+                hour: '2-digit',
+                minute: '2-digit',
+                hourCycle: 'h23',
+            }
+        ).formatToParts(new Date())
+
+    const currentMinutes =
+        Number(
+            timeParts.find(
+                (part) => part.type === 'hour'
+            )?.value ?? '0'
+        ) * 60 +
+        Number(
+            timeParts.find(
+                (part) => part.type === 'minute'
+            )?.value ?? '0'
+        )
+
+    function getStartMinutes(
+        startTime: string | null
+    ) {
+        if (!startTime) {
+            return null
+        }
+
+        const [hour, minute] =
+            startTime.slice(0, 5)
+                .split(':')
+                .map(Number)
+
+        if (
+            !Number.isFinite(hour) ||
+            !Number.isFinite(minute)
+        ) {
+            return null
+        }
+
+        return hour * 60 + minute
+    }
+
     /*
      * Supabase
      */
@@ -115,9 +160,11 @@ export default async function Archive({
                 id,
                 event_date,
                 title,
+                subtitle,
                 venue,
                 seat_block_row,
                 seat_number,
+                seat_type,
                 start_time,
                 ticket_price,
                 memo,
@@ -136,7 +183,7 @@ export default async function Archive({
                     position
                 )
             `)
-            .lt(
+            .lte(
                 'event_date',
                 todayJst
             )
@@ -206,6 +253,26 @@ export default async function Archive({
         )
     }
 
+    const archivedEvents =
+        (events ?? []).filter((event) => {
+            if (event.event_date < todayJst) {
+                return true
+            }
+
+            if (event.event_date > todayJst) {
+                return false
+            }
+
+            const startMinutes =
+                getStartMinutes(event.start_time)
+
+            if (startMinutes === null) {
+                return false
+            }
+
+            return startMinutes <= currentMinutes
+        })
+
     /*
      * 表示
      */
@@ -214,7 +281,7 @@ export default async function Archive({
         <main>
             <EventListClient
                 events={
-                    events ?? []
+                    archivedEvents
                 }
                 selectedTags={
                     selectedTags

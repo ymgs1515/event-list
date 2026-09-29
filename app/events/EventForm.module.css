@@ -242,6 +242,8 @@
 .titleDisplay {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    column-gap: 6px;
 
     min-height: 34px;
 
@@ -253,6 +255,29 @@
 
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+}
+
+.titleDisplayMain {
+    min-width: 0;
+    max-width: 100%;
+
+    overflow-wrap: anywhere;
+}
+
+.subtitleInline {
+    color: #777777;
+    font-weight: 500;
+}
+
+.subtitleInput {
+    min-height: 30px;
+    height: 30px;
+    margin-top: 0px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+
+    font-size: 11.5px;
 }
 
 
@@ -387,7 +412,7 @@
 
 .ticketGrid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 10px;
 }
 
@@ -396,7 +421,15 @@
 }
 
 .ticketWide {
+    grid-column: span 4;
+}
+
+.ticketNarrow {
     grid-column: span 2;
+}
+
+.ticketHalf {
+    grid-column: span 3;
 }
 
 
@@ -473,9 +506,12 @@
 /* 座席情報 */
 
 .ticketDisplaySeats {
-    display: flex;
-    align-items: flex-start;
-    gap: 20px;
+    display: grid;
+    grid-template-columns:
+        minmax(0, max-content) max-content;
+    align-items: start;
+    justify-content: start;
+    column-gap: 20px;
 }
 
 .ticketDisplaySeatsSingle {
@@ -516,12 +552,11 @@
 }
 
 .ticketDisplaySeatBlock {
-    flex: 1;
     min-width: 0;
 }
 
 .ticketDisplaySeatNumber {
-    flex: 0 0 auto;
+    min-width: 0;
 }
 
 .ticketDisplaySeatNumber .ticketDisplaySeatValue {
@@ -610,9 +645,19 @@
     font-size: 10px;
 }
 
-.ticketDisplayPrice {
+.ticketDisplayPriceRow {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+
     min-height: 14px;
 
+    white-space: nowrap;
+}
+
+.ticketDisplaySeatType,
+.ticketDisplayPrice {
     font-size: 10.5px;
     font-weight: 500;
 }
@@ -1105,9 +1150,9 @@
     content: "";
 
     position: absolute;
-    top: -1px;
+    top: 0px;
     right: 0;
-    bottom: 1px;
+    bottom: 0px;
     left: 0;
 
     z-index: -1;

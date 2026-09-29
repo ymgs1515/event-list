@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import {
     ChangeEvent,
@@ -71,6 +71,7 @@ function NewEventPageContent() {
 
     const [eventDate, setEventDate] = useState('')
     const [title, setTitle] = useState('')
+    const [subtitle, setSubtitle] = useState('')
 
     const [mainVisual, setMainVisual] = useState<File | null>(null)
     const [mainVisualPreview, setMainVisualPreview] = useState<
@@ -89,6 +90,7 @@ function NewEventPageContent() {
 
     const [seatBlockRow, setSeatBlockRow] = useState('')
     const [seatNumber, setSeatNumber] = useState('')
+    const [seatType, setSeatType] = useState('')
     const [venue, setVenue] = useState('')
     const [doorsTime, setDoorsTime] = useState('')
     const [startTime, setStartTime] = useState('')
@@ -141,6 +143,8 @@ function NewEventPageContent() {
                         .select(`
                             event_date,
                             title,
+                            subtitle,
+                            seat_type,
                             venue,
                             doors_time,
                             start_time,
@@ -263,6 +267,9 @@ function NewEventPageContent() {
                 setTitle(
                     eventData.title ?? ''
                 )
+                setSubtitle(
+                    eventData.subtitle ?? ''
+                )
 
                 setMainVisual(copiedMainVisual)
                 setMainVisualPositionX(
@@ -298,6 +305,9 @@ function NewEventPageContent() {
                             5
                         )
                         : ''
+                )
+                setSeatType(
+                    eventData.seat_type ?? ''
                 )
                 setTicketPrice(
                     eventData.ticket_price ?? ''
@@ -368,9 +378,11 @@ function NewEventPageContent() {
         return (
             eventDate !== '' ||
             title !== '' ||
+            subtitle !== '' ||
             mainVisual !== null ||
             seatBlockRow !== '' ||
             seatNumber !== '' ||
+            seatType !== '' ||
             venue !== '' ||
             doorsTime !== '' ||
             startTime !== '' ||
@@ -386,9 +398,11 @@ function NewEventPageContent() {
     }, [
         eventDate,
         title,
+        subtitle,
         mainVisual,
         seatBlockRow,
         seatNumber,
+        seatType,
         venue,
         doorsTime,
         startTime,
@@ -823,6 +837,7 @@ function NewEventPageContent() {
                     user_id: user.id,
                     event_date: eventDate,
                     title: title.trim(),
+                    subtitle: subtitle.trim() || null,
 
                     main_visual_position_x:
                         mainVisualPositionX,
@@ -834,6 +849,8 @@ function NewEventPageContent() {
                         seatBlockRow.trim() || null,
                     seat_number:
                         seatNumber.trim() || null,
+                    seat_type:
+                        seatType.trim() || null,
                     venue: venue.trim() || null,
                     doors_time: doorsTime || null,
                     start_time: startTime || null,
@@ -1111,7 +1128,77 @@ function NewEventPageContent() {
             <main
                 className={`${styles.page} ${styles.pageEdit}`}
             >
-                <p>イベント情報をコピーしています...</p>
+                <AppHeaderPortal>
+                    <button
+                        type="button"
+                        className={styles.backButton}
+                        onClick={handleBack}
+                        aria-label="戻る"
+                        title="戻る"
+                    >
+                        <ChevronLeft
+                            size={28}
+                            strokeWidth={2}
+                        />
+                    </button>
+
+                    <h1 className={styles.headerTitle}>
+                        予定を追加
+                    </h1>
+
+                    <div className={styles.headerActions} />
+                </AppHeaderPortal>
+
+                <div
+                    className={styles.loadingContent}
+                    aria-label="イベント情報をコピーしています"
+                >
+                    <div
+                        className={styles.skeletonTopCard}
+                    />
+
+                    <div
+                        className={`${styles.skeleton} ${styles.skeletonMainVisual}`}
+                    />
+
+                    <div
+                        className={`${styles.skeleton} ${styles.skeletonTicket}`}
+                    />
+
+                    <div className={styles.skeletonCard}>
+                        <div
+                            className={`${styles.skeleton} ${styles.skeletonHeading}`}
+                        />
+                        <div
+                            className={styles.skeletonPhotos}
+                        >
+                            <div
+                                className={`${styles.skeleton} ${styles.skeletonPhoto}`}
+                            />
+                            <div
+                                className={`${styles.skeleton} ${styles.skeletonPhoto}`}
+                            />
+                            <div
+                                className={`${styles.skeleton} ${styles.skeletonPhoto}`}
+                            />
+                        </div>
+                    </div>
+
+                    <div className={styles.skeletonCard}>
+                        <div
+                            className={`${styles.skeleton} ${styles.skeletonHeading}`}
+                        />
+                        <div
+                            className={`${styles.skeleton} ${styles.skeletonLine}`}
+                        />
+                        <div
+                            className={`${styles.skeleton} ${styles.skeletonLine}`}
+                        />
+                        <div
+                            className={`${styles.skeleton} ${styles.skeletonLine} ${styles.skeletonLineShort}`}
+                        />
+                    </div>
+                </div>
             </main>
         )
     }
@@ -1205,6 +1292,19 @@ function NewEventPageContent() {
                                 required
                                 rows={1}
                                 className={`${styles.input} ${styles.titleInput}`}
+                            />
+
+                            <input
+                                id="subtitle"
+                                type="text"
+                                value={subtitle}
+                                onChange={(event) =>
+                                    setSubtitle(
+                                        event.target.value
+                                    )
+                                }
+                                placeholder="サブタイトル"
+                                className={`${styles.input} ${styles.subtitleInput}`}
                             />
                         </div>
                     </div>
@@ -1312,7 +1412,11 @@ function NewEventPageContent() {
                             />
                         </div>
 
-                        <div>
+                        <div
+                            className={
+                                styles.ticketNarrow
+                            }
+                        >
                             <label
                                 htmlFor="seat-number"
                                 className={
@@ -1336,7 +1440,67 @@ function NewEventPageContent() {
                             />
                         </div>
 
-                        <div>
+                        <div
+                            className={
+                                styles.ticketHalf
+                            }
+                        >
+                            <label
+                                htmlFor="seat-type"
+                                className={
+                                    styles.fieldLabel
+                                }
+                            >
+                                席種
+                            </label>
+
+                            <input
+                                id="seat-type"
+                                type="text"
+                                placeholder="例：指定席"
+                                value={seatType}
+                                onChange={(event) =>
+                                    setSeatType(
+                                        event.target.value
+                                    )
+                                }
+                                className={styles.input}
+                            />
+                        </div>
+
+                        <div
+                            className={
+                                styles.ticketHalf
+                            }
+                        >
+                            <label
+                                htmlFor="ticket-price"
+                                className={
+                                    styles.fieldLabel
+                                }
+                            >
+                                チケット料金
+                            </label>
+
+                            <input
+                                id="ticket-price"
+                                type="text"
+                                placeholder="例：7,000円"
+                                value={ticketPrice}
+                                onChange={(event) =>
+                                    setTicketPrice(
+                                        event.target.value
+                                    )
+                                }
+                                className={styles.input}
+                            />
+                        </div>
+
+                        <div
+                            className={
+                                styles.ticketHalf
+                            }
+                        >
                             <label
                                 htmlFor="doors-time"
                                 className={
@@ -1359,7 +1523,11 @@ function NewEventPageContent() {
                             />
                         </div>
 
-                        <div>
+                        <div
+                            className={
+                                styles.ticketHalf
+                            }
+                        >
                             <label
                                 htmlFor="start-time"
                                 className={
@@ -1375,30 +1543,6 @@ function NewEventPageContent() {
                                 value={startTime}
                                 onChange={(event) =>
                                     setStartTime(
-                                        event.target.value
-                                    )
-                                }
-                                className={styles.input}
-                            />
-                        </div>
-
-                        <div>
-                            <label
-                                htmlFor="ticket-price"
-                                className={
-                                    styles.fieldLabel
-                                }
-                            >
-                                チケット料金
-                            </label>
-
-                            <input
-                                id="ticket-price"
-                                type="text"
-                                placeholder="例：7,000円"
-                                value={ticketPrice}
-                                onChange={(event) =>
-                                    setTicketPrice(
                                         event.target.value
                                     )
                                 }

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import {
     ChangeEvent,
@@ -58,10 +58,12 @@ type EditablePhoto = {
 type EditSnapshot = {
     eventDate: string
     title: string
+    subtitle: string
     mainVisualPositionX: number
     mainVisualPositionY: number
     seatBlockRow: string
     seatNumber: string
+    seatType: string
     venue: string
     doorsTime: string
     startTime: string
@@ -101,6 +103,7 @@ export default function EventPage() {
 
     const [eventDate, setEventDate] = useState('')
     const [title, setTitle] = useState('')
+    const [subtitle, setSubtitle] = useState('')
     const titleDisplayRef =
         useRef<HTMLDivElement | null>(null)
 
@@ -299,6 +302,7 @@ export default function EventPage() {
 
     const [seatBlockRow, setSeatBlockRow] = useState('')
     const [seatNumber, setSeatNumber] = useState('')
+    const [seatType, setSeatType] = useState('')
     const [venue, setVenue] = useState('')
     const [doorsTime, setDoorsTime] = useState('')
     const [startTime, setStartTime] = useState('')
@@ -360,8 +364,10 @@ export default function EventPage() {
                     id,
                     event_date,
                     title,
+                    subtitle,
                     seat_block_row,
                     seat_number,
+                    seat_type,
                     venue,
                     doors_time,
                     start_time,
@@ -500,6 +506,10 @@ export default function EventPage() {
                 eventData.title ?? ''
             )
 
+            setSubtitle(
+                eventData.subtitle ?? ''
+            )
+
             setMainVisualPositionX(
                 eventData.main_visual_position_x ??
                 50
@@ -516,6 +526,10 @@ export default function EventPage() {
 
             setSeatNumber(
                 eventData.seat_number ?? ''
+            )
+
+            setSeatType(
+                eventData.seat_type ?? ''
             )
 
             setVenue(
@@ -767,6 +781,9 @@ export default function EventPage() {
                 title:
                     eventData.title ?? '',
 
+                subtitle:
+                    eventData.subtitle ?? '',
+
                 mainVisualPositionX:
                     eventData
                         .main_visual_position_x ??
@@ -784,6 +801,10 @@ export default function EventPage() {
                 seatNumber:
                     eventData
                         .seat_number ?? '',
+
+                seatType:
+                    eventData
+                        .seat_type ?? '',
 
                 venue:
                     eventData.venue ?? '',
@@ -855,10 +876,12 @@ export default function EventPage() {
         const currentSnapshot: EditSnapshot = {
             eventDate,
             title,
+            subtitle,
             mainVisualPositionX,
             mainVisualPositionY,
             seatBlockRow,
             seatNumber,
+            seatType,
             venue,
             doorsTime,
             startTime,
@@ -953,10 +976,12 @@ export default function EventPage() {
         initialSnapshot,
         eventDate,
         title,
+        subtitle,
         mainVisualPositionX,
         mainVisualPositionY,
         seatBlockRow,
         seatNumber,
+        seatType,
         venue,
         doorsTime,
         startTime,
@@ -1035,7 +1060,7 @@ export default function EventPage() {
         return () => {
             observer.disconnect()
         }
-    }, [isEditing, title])
+    }, [isEditing, title, subtitle])
 
     useEffect(() => {
         if (isEditing) {
@@ -1590,6 +1615,7 @@ export default function EventPage() {
                 .update({
                     event_date: eventDate,
                     title: title.trim(),
+                    subtitle: subtitle.trim() || null,
 
                     main_visual_position_x:
                         newMainVisual
@@ -1606,6 +1632,9 @@ export default function EventPage() {
 
                     seat_number:
                         seatNumber.trim() || null,
+
+                    seat_type:
+                        seatType.trim() || null,
 
                     venue:
                         venue.trim() || null,
@@ -2587,24 +2616,51 @@ export default function EventPage() {
                             </div>
 
                             {isEditing ? (
-                                <textarea
-                                    id="title"
-                                    value={title}
-                                    onChange={(event) =>
-                                        setTitle(
-                                            event.target.value
-                                        )
-                                    }
-                                    required
-                                    rows={1}
-                                    className={`${styles.input} ${styles.titleInput}`}
-                                />
+                                <>
+                                    <textarea
+                                        id="title"
+                                        value={title}
+                                        onChange={(event) =>
+                                            setTitle(
+                                                event.target.value
+                                            )
+                                        }
+                                        required
+                                        rows={1}
+                                        className={`${styles.input} ${styles.titleInput}`}
+                                    />
+
+                                    <input
+                                        id="subtitle"
+                                        type="text"
+                                        value={subtitle}
+                                        onChange={(event) =>
+                                            setSubtitle(
+                                                event.target.value
+                                            )
+                                        }
+                                        placeholder="サブタイトル"
+                                        className={`${styles.input} ${styles.subtitleInput}`}
+                                    />
+                                </>
                             ) : (
                                 <div
                                     ref={titleDisplayRef}
                                     className={styles.titleDisplay}
                                 >
-                                    {title}
+                                    <span
+                                        className={styles.titleDisplayMain}
+                                    >
+                                        {title}
+                                        {subtitle && (
+                                            <span
+                                                className={styles.subtitleInline}
+                                            >
+                                                {' '}
+                                                {subtitle}
+                                            </span>
+                                        )}
+                                    </span>
                                 </div>
                             )}
                         </div>
@@ -2761,7 +2817,11 @@ export default function EventPage() {
                                     />
                                 </div>
 
-                                <div>
+                                <div
+                                    className={
+                                        styles.ticketNarrow
+                                    }
+                                >
                                     <label
                                         htmlFor="seat-number"
                                         className={
@@ -2785,7 +2845,67 @@ export default function EventPage() {
                                     />
                                 </div>
 
-                                <div>
+                                <div
+                                    className={
+                                        styles.ticketHalf
+                                    }
+                                >
+                                    <label
+                                        htmlFor="seat-type"
+                                        className={
+                                            styles.fieldLabel
+                                        }
+                                    >
+                                        席種
+                                    </label>
+
+                                    <input
+                                        id="seat-type"
+                                        type="text"
+                                        placeholder="例：指定席"
+                                        value={seatType}
+                                        onChange={(event) =>
+                                            setSeatType(
+                                                event.target.value
+                                            )
+                                        }
+                                        className={styles.input}
+                                    />
+                                </div>
+
+                                <div
+                                    className={
+                                        styles.ticketHalf
+                                    }
+                                >
+                                    <label
+                                        htmlFor="ticket-price"
+                                        className={
+                                            styles.fieldLabel
+                                        }
+                                    >
+                                        チケット料金
+                                    </label>
+
+                                    <input
+                                        id="ticket-price"
+                                        type="text"
+                                        placeholder="例：7,000円"
+                                        value={ticketPrice}
+                                        onChange={(event) =>
+                                            setTicketPrice(
+                                                event.target.value
+                                            )
+                                        }
+                                        className={styles.input}
+                                    />
+                                </div>
+
+                                <div
+                                    className={
+                                        styles.ticketHalf
+                                    }
+                                >
                                     <label
                                         htmlFor="doors-time"
                                         className={
@@ -2808,7 +2928,11 @@ export default function EventPage() {
                                     />
                                 </div>
 
-                                <div>
+                                <div
+                                    className={
+                                        styles.ticketHalf
+                                    }
+                                >
                                     <label
                                         htmlFor="start-time"
                                         className={
@@ -2824,30 +2948,6 @@ export default function EventPage() {
                                         value={startTime}
                                         onChange={(event) =>
                                             setStartTime(
-                                                event.target.value
-                                            )
-                                        }
-                                        className={styles.input}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label
-                                        htmlFor="ticket-price"
-                                        className={
-                                            styles.fieldLabel
-                                        }
-                                    >
-                                        チケット料金
-                                    </label>
-
-                                    <input
-                                        id="ticket-price"
-                                        type="text"
-                                        placeholder="例：7,000円"
-                                        value={ticketPrice}
-                                        onChange={(event) =>
-                                            setTicketPrice(
                                                 event.target.value
                                             )
                                         }
@@ -2872,6 +2972,7 @@ export default function EventPage() {
                                 }
                             >
                                 {title}
+                                {subtitle && ` ${subtitle}`}
                             </div>
 
                             {(seatBlockRow || seatNumber) && (
@@ -3002,13 +3103,33 @@ export default function EventPage() {
                                         styles.ticketDisplayRight
                                     }
                                 >
-                                    <div
-                                        className={
-                                            styles.ticketDisplayPrice
-                                        }
-                                    >
-                                        {ticketPrice}
-                                    </div>
+                                    {(seatType || ticketPrice) && (
+                                        <div
+                                            className={
+                                                styles.ticketDisplayPriceRow
+                                            }
+                                        >
+                                            {seatType && (
+                                                <div
+                                                    className={
+                                                        styles.ticketDisplaySeatType
+                                                    }
+                                                >
+                                                    {seatType}
+                                                </div>
+                                            )}
+
+                                            {ticketPrice && (
+                                                <div
+                                                    className={
+                                                        styles.ticketDisplayPrice
+                                                    }
+                                                >
+                                                    {ticketPrice}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
 
                                     {(doorsTime ||
                                         startTime) && (
