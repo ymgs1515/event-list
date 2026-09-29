@@ -918,9 +918,14 @@ export default function EventListClient({
                                         styles.nextLiveTitle
                                     }
                                 >
-                                    {
-                                        featuredEvent.title
-                                    }
+                                    {featuredEvent.title}
+
+                                    {featuredEvent.subtitle && (
+                                        <>
+                                            {' '}
+                                            {featuredEvent.subtitle}
+                                        </>
+                                    )}
                                 </div>
 
                                 <div
