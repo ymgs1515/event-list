@@ -443,6 +443,46 @@ export default function EventPage() {
     useEffect(() => {
         let cancelled = false
 
+        async function loadPhotos() {
+            const photos: Omit<ExistingPhoto, 'previewUrl'>[] = []
+            const pageSize = 500
+            let offset = 0
+
+            while (!cancelled) {
+                const { data, error, count } = await supabase
+                    .from('event_photos')
+                    .select(
+                        'id, photo_type, storage_path, sort_order',
+                        { count: 'exact' }
+                    )
+                    .eq('event_id', eventId)
+                    .order('sort_order', { ascending: true })
+                    .order('id', { ascending: true })
+                    .range(offset, offset + pageSize - 1)
+
+                if (cancelled) {
+                    return { data: null, error: null }
+                }
+
+                if (error) {
+                    return { data: null, error }
+                }
+
+                if (!data || data.length === 0) {
+                    break
+                }
+
+                photos.push(...data)
+                offset += data.length
+
+                if (count !== null && offset >= count) {
+                    break
+                }
+            }
+
+            return { data: photos, error: null }
+        }
+
         async function loadEvent() {
             setLoading(true)
             setErrorMessage('')
@@ -508,18 +548,7 @@ export default function EventPage() {
                         ascending: true,
                     }),
 
-                supabase
-                    .from('event_photos')
-                    .select(`
-                    id,
-                    photo_type,
-                    storage_path,
-                    sort_order
-                `)
-                    .eq('event_id', eventId)
-                    .order('sort_order', {
-                        ascending: true,
-                    }),
+                loadPhotos(),
             ])
 
             if (cancelled) {
@@ -1695,39 +1724,23 @@ export default function EventPage() {
             return
         }
 
-        const max =
-            type === 'official' ? 20 : 5
+        if (type === 'personal') {
+            const existingCount =
+                personalPhotos.filter(
+                    (photo) =>
+                        !deletedPhotoIds.includes(photo.id)
+                ).length
 
-        const existingPhotos =
-            type === 'official'
-                ? officialPhotos
-                : personalPhotos
+            if (
+                existingCount +
+                newPersonalPhotos.length +
+                files.length > 5
+            ) {
+                setErrorMessage('MY PHOTOSは最大5枚です。')
 
-        const newPhotos =
-            type === 'official'
-                ? newOfficialPhotos
-                : newPersonalPhotos
-
-        const existingCount =
-            existingPhotos.filter(
-                (photo) =>
-                    !deletedPhotoIds.includes(photo.id)
-            ).length
-
-        if (
-            existingCount +
-            newPhotos.length +
-            files.length >
-            max
-        ) {
-            setErrorMessage(
-                type === 'official'
-                    ? 'OFFICIAL PHOTOSは最大20枚です。'
-                    : 'MY PHOTOSは最大5枚です。'
-            )
-
-            event.target.value = ''
-            return
+                event.target.value = ''
+                return
+            }
         }
 
         try {
@@ -3592,7 +3605,7 @@ export default function EventPage() {
                                     <h3 className={styles.photoLabel}>
                                         OFFICIAL PHOTOS (
                                         {editableOfficialPhotos.length}
-                                        /20)
+                                        )
                                     </h3>
 
                                     <div className={styles.photoTrack}>
@@ -3693,29 +3706,26 @@ export default function EventPage() {
                                             )
                                         )}
 
-                                        {editableOfficialPhotos.length <
-                                            20 && (
-                                                <label
-                                                    className={
-                                                        styles.photoAdd
-                                                    }
-                                                >
-                                                    ＋
+                                        <label
+                                            className={
+                                                styles.photoAdd
+                                            }
+                                        >
+                                            ＋
 
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        multiple
-                                                        onChange={(event) =>
-                                                            handlePhotoSelect(
-                                                                event,
-                                                                'official'
-                                                            )
-                                                        }
-                                                        hidden
-                                                    />
-                                                </label>
-                                            )}
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                multiple
+                                                onChange={(event) =>
+                                                    handlePhotoSelect(
+                                                        event,
+                                                        'official'
+                                                    )
+                                                }
+                                                hidden
+                                            />
+                                        </label>
                                     </div>
                                 </div>
 

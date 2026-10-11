@@ -532,34 +532,26 @@ function NewEventPageContent() {
             return
         }
 
-        const currentPhotos =
-            photoType === 'official'
-                ? officialPhotos
-                : personalPhotos
+        if (photoType === 'personal') {
+            const remainingCount = 5 - personalPhotos.length
 
-        const maxCount = photoType === 'official' ? 20 : 5
-        const remainingCount = maxCount - currentPhotos.length
+            if (remainingCount <= 0) {
+                setErrorMessage(
+                    'MY PHOTOSは最大5枚まで登録できます。'
+                )
 
-        if (remainingCount <= 0) {
-            setErrorMessage(
-                photoType === 'official'
-                    ? 'OFFICIAL PHOTOSは最大20枚まで登録できます。'
-                    : 'MY PHOTOSは最大5枚まで登録できます。'
-            )
+                event.target.value = ''
+                return
+            }
 
-            event.target.value = ''
-            return
-        }
+            if (selectedFiles.length > remainingCount) {
+                setErrorMessage(
+                    `MY PHOTOSはあと${remainingCount}枚まで追加できます。`
+                )
 
-        if (selectedFiles.length > remainingCount) {
-            setErrorMessage(
-                photoType === 'official'
-                    ? `OFFICIAL PHOTOSはあと${remainingCount}枚まで追加できます。`
-                    : `MY PHOTOSはあと${remainingCount}枚まで追加できます。`
-            )
-
-            event.target.value = ''
-            return
+                event.target.value = ''
+                return
+            }
         }
 
         try {
@@ -1625,7 +1617,7 @@ function NewEventPageContent() {
                         <div className={styles.photoSection}>
                             <h3 className={styles.photoLabel}>
                                 OFFICIAL PHOTOS (
-                                {officialPhotos.length}/20)
+                                {officialPhotos.length})
                             </h3>
 
                             <div className={styles.photoTrack}>
@@ -1718,26 +1710,24 @@ function NewEventPageContent() {
                                     )
                                 )}
 
-                                {officialPhotos.length < 20 && (
-                                    <label
-                                        className={styles.photoAdd}
-                                    >
-                                        ＋
+                                <label
+                                    className={styles.photoAdd}
+                                >
+                                    ＋
 
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            multiple
-                                            onChange={(event) =>
-                                                handlePhotoChange(
-                                                    event,
-                                                    'official'
-                                                )
-                                            }
-                                            hidden
-                                        />
-                                    </label>
-                                )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={(event) =>
+                                            handlePhotoChange(
+                                                event,
+                                                'official'
+                                            )
+                                        }
+                                        hidden
+                                    />
+                                </label>
                             </div>
                         </div>
 
