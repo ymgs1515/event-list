@@ -1,4 +1,4 @@
-﻿.page {
+.page {
     min-height: calc(100dvh - 58px);
     padding-bottom: 88px;
     background: #eeeeee;
@@ -95,6 +95,25 @@
         0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
+.searchOption {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    margin-bottom: 10px;
+
+    color: #444444;
+
+    font-size: 11px;
+    line-height: 1.35;
+
+    cursor: pointer;
+}
+
+.searchOption input {
+    margin: 0;
+}
+
 .searchInput {
     width: 100%;
     padding: 7px 2px;
@@ -110,6 +129,15 @@
 
 .searchInput:focus {
     border-bottom-color: #222222;
+}
+
+.searchTextarea {
+    min-height: 58px;
+
+    font-family: inherit;
+    line-height: 1.45;
+
+    resize: none;
 }
 
 .popupButtons {
@@ -512,7 +540,11 @@
 }
 
 .artistName {
-    white-space: nowrap;
+    min-width: 0;
+    max-width: 100%;
+
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .nextLiveWeekday {

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import {
     ChangeEvent,
@@ -13,7 +13,7 @@ import {
     useSearchParams,
 } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { compressImage } from '@/lib/image/compress'
+import { compressImage, createImageThumbnail } from '@/lib/image/compress'
 import { ChevronLeft, ChevronRight, Save } from 'lucide-react'
 import styles from '../EventForm.module.css'
 import MainVisualFrame from '@/components/MainVisualFrame'
@@ -22,6 +22,9 @@ import {
     usePageDirty,
 } from '@/components/AppShell'
 import AppHeaderPortal from '@/components/AppHeaderPortal'
+import {
+    getMainVisualThumbnailPath,
+} from '@/lib/image/mainVisualThumbnail'
 
 type PhotoItem = {
     id: string
@@ -909,6 +912,39 @@ function NewEventPageContent() {
                 }
 
                 uploadedPaths.push(storagePath)
+
+                try {
+                    const thumbnail =
+                        await createImageThumbnail(
+                            mainVisual
+                        )
+
+                    const thumbnailPath =
+                        getMainVisualThumbnailPath(
+                            storagePath
+                        )
+
+                    const {
+                        error: thumbnailUploadError,
+                    } = await supabase.storage
+                        .from('event-images')
+                        .upload(
+                            thumbnailPath,
+                            thumbnail,
+                            {
+                                upsert: true,
+                                contentType: 'image/webp',
+                            }
+                        )
+
+                    if (!thumbnailUploadError) {
+                        uploadedPaths.push(
+                            thumbnailPath
+                        )
+                    }
+                } catch {
+                    // サムネイルは後からHOME側でも補完できる
+                }
 
                 const { error: updateError } =
                     await supabase

@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
-    Archive,
+    CalendarDays,
     House,
+    NotebookDot,
     Settings,
 } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -16,6 +17,7 @@ type Props = {
     current?:
     | 'archive'
     | 'scheduled'
+    | 'calendar'
     | 'settings'
 
     isDirty?: boolean
@@ -26,6 +28,19 @@ export default function FooterNav({
     isDirty = false,
 }: Props) {
     const router = useRouter()
+    const pathname = usePathname()
+
+    const effectiveCurrent =
+        pathname.startsWith('/calendar')
+            ? 'calendar'
+            : current
+
+    useEffect(() => {
+        router.prefetch('/')
+        router.prefetch('/archive')
+        router.prefetch('/calendar')
+        router.prefetch('/settings')
+    }, [router])
 
     const [
         pendingHref,
@@ -81,10 +96,11 @@ export default function FooterNav({
         item:
             | 'archive'
             | 'scheduled'
+            | 'calendar'
             | 'settings'
     ) {
         const isActive =
-            current === item
+            effectiveCurrent === item
 
         return {
             flex: 1,
@@ -161,43 +177,11 @@ export default function FooterNav({
                     type="button"
                     onClick={() =>
                         requestNavigation(
-                            '/archive'
-                        )
-                    }
-                    aria-current={
-                        current ===
-                            'archive'
-                            ? 'page'
-                            : undefined
-                    }
-                    style={itemStyle(
-                        'archive'
-                    )}
-                >
-                    <Archive
-                        size={23}
-                        strokeWidth={
-                            current ===
-                                'archive'
-                                ? 2.4
-                                : 1.8
-                        }
-                    />
-
-                    <span>
-                        思い出
-                    </span>
-                </button>
-
-                <button
-                    type="button"
-                    onClick={() =>
-                        requestNavigation(
                             '/'
                         )
                     }
                     aria-current={
-                        current ===
+                        effectiveCurrent ===
                             'scheduled'
                             ? 'page'
                             : undefined
@@ -209,7 +193,7 @@ export default function FooterNav({
                     <House
                         size={24}
                         strokeWidth={
-                            current ===
+                            effectiveCurrent ===
                                 'scheduled'
                                 ? 2.4
                                 : 1.8
@@ -225,11 +209,75 @@ export default function FooterNav({
                     type="button"
                     onClick={() =>
                         requestNavigation(
+                            '/archive'
+                        )
+                    }
+                    aria-current={
+                        effectiveCurrent ===
+                            'archive'
+                            ? 'page'
+                            : undefined
+                    }
+                    style={itemStyle(
+                        'archive'
+                    )}
+                >
+                    <NotebookDot
+                        size={23}
+                        strokeWidth={
+                            effectiveCurrent ===
+                                'archive'
+                                ? 2.4
+                                : 1.8
+                        }
+                    />
+
+                    <span>
+                        思い出
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        requestNavigation(
+                            '/calendar'
+                        )
+                    }
+                    aria-current={
+                        effectiveCurrent ===
+                            'calendar'
+                            ? 'page'
+                            : undefined
+                    }
+                    style={itemStyle(
+                        'calendar'
+                    )}
+                >
+                    <CalendarDays
+                        size={23}
+                        strokeWidth={
+                            effectiveCurrent ===
+                                'calendar'
+                                ? 2.4
+                                : 1.8
+                        }
+                    />
+
+                    <span>
+                        カレンダー
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        requestNavigation(
                             '/settings'
                         )
                     }
                     aria-current={
-                        current ===
+                        effectiveCurrent ===
                             'settings'
                             ? 'page'
                             : undefined
@@ -241,7 +289,7 @@ export default function FooterNav({
                     <Settings
                         size={23}
                         strokeWidth={
-                            current ===
+                            effectiveCurrent ===
                                 'settings'
                                 ? 2.4
                                 : 1.8

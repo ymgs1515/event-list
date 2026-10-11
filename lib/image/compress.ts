@@ -1,7 +1,25 @@
 export async function compressImage(file: File): Promise<File> {
-    const image = await loadImage(file)
+    return convertImageToWebp(file, 1600, 0.82)
+}
 
-    const maxSize = 1600
+export async function createImageThumbnail(
+    file: File
+): Promise<File> {
+    return convertImageToWebp(
+        file,
+        960,
+        0.72,
+        'main-visual-thumb'
+    )
+}
+
+async function convertImageToWebp(
+    file: File,
+    maxSize: number,
+    quality: number,
+    outputBaseName?: string
+): Promise<File> {
+    const image = await loadImage(file)
 
     let width = image.naturalWidth
     let height = image.naturalHeight
@@ -36,12 +54,14 @@ export async function compressImage(file: File): Promise<File> {
                 }
             },
             'image/webp',
-            0.82
+            quality
         )
     })
 
     const baseName =
-        file.name.replace(/\.[^/.]+$/, '') || 'image'
+        outputBaseName ||
+        file.name.replace(/\.[^/.]+$/, '') ||
+        'image'
 
     return new File(
         [blob],

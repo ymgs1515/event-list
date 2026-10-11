@@ -6,6 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import { Trash2 } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import AlertDialog from '@/components/AlertDialog'
+import {
+    getMainVisualThumbnailPath,
+} from '@/lib/image/mainVisualThumbnail'
 
 type Props = {
     eventId: string
@@ -82,7 +85,10 @@ export default function DeleteEventButton({
 
         if (eventData.main_visual_path) {
             storagePaths.push(
-                eventData.main_visual_path
+                eventData.main_visual_path,
+                getMainVisualThumbnailPath(
+                    eventData.main_visual_path
+                )
             )
         }
 

@@ -6,6 +6,7 @@ type ArchiveProps = {
     searchParams: Promise<{
         tag?: string | string[]
         q?: string | string[]
+        artistOnly?: string | string[]
     }>
 }
 
@@ -145,6 +146,18 @@ export default async function Archive({
         )
             ? keywordParameter[0] ?? ''
             : keywordParameter ?? ''
+
+    const artistOnlyParameter =
+        params.artistOnly
+
+    const selectedArtistOnly =
+        (
+            Array.isArray(
+                artistOnlyParameter
+            )
+                ? artistOnlyParameter[0]
+                : artistOnlyParameter
+        ) === '1'
 
     /*
      * イベントと検索別名辞書を並列取得
@@ -288,6 +301,9 @@ export default async function Archive({
                 }
                 selectedKeyword={
                     selectedKeyword
+                }
+                selectedArtistOnly={
+                    selectedArtistOnly
                 }
                 searchAliases={
                     searchAliases ?? []

@@ -10,7 +10,7 @@ import {
 } from 'react'
 import { useParams, useRouter, useSearchParams, } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { compressImage } from '@/lib/image/compress'
+import { compressImage, createImageThumbnail } from '@/lib/image/compress'
 import { ChevronLeft, ChevronRight, Copy, Pencil, Save, Undo2 } from 'lucide-react'
 import styles from '../EventForm.module.css'
 import MainVisualFrame from '@/components/MainVisualFrame'
@@ -24,6 +24,9 @@ import {
     usePageDirty,
 } from '@/components/AppShell'
 import AppHeaderPortal from '@/components/AppHeaderPortal'
+import {
+    getMainVisualThumbnailPath,
+} from '@/lib/image/mainVisualThumbnail'
 
 const supabase = createClient()
 
@@ -53,6 +56,71 @@ type EditablePhoto = {
     id: string
     previewUrl: string
     isNew: boolean
+}
+
+type SetlistCopyOption = {
+    id: string
+    eventDate: string
+    title: string
+    subtitle: string
+}
+
+function shiftDateByMonths(
+    dateString: string,
+    monthOffset: number
+) {
+    const [year, month, day] =
+        dateString
+            .split('-')
+            .map(Number)
+
+    if (
+        !year ||
+        !month ||
+        !day
+    ) {
+        return dateString
+    }
+
+    const targetFirstDay =
+        new Date(
+            Date.UTC(
+                year,
+                month - 1 + monthOffset,
+                1
+            )
+        )
+
+    const targetYear =
+        targetFirstDay.getUTCFullYear()
+
+    const targetMonth =
+        targetFirstDay.getUTCMonth()
+
+    const lastDay =
+        new Date(
+            Date.UTC(
+                targetYear,
+                targetMonth + 1,
+                0
+            )
+        ).getUTCDate()
+
+    const targetDay =
+        Math.min(
+            day,
+            lastDay
+        )
+
+    return [
+        targetYear,
+        String(
+            targetMonth + 1
+        ).padStart(2, '0'),
+        String(
+            targetDay
+        ).padStart(2, '0'),
+    ].join('-')
 }
 
 type EditSnapshot = {
@@ -309,6 +377,36 @@ export default function EventPage() {
     const [ticketPrice, setTicketPrice] = useState('')
 
     const [setlistItems, setSetlistItems] = useState<SetlistItem[]>([])
+
+    const [
+        setlistCopyOptions,
+        setSetlistCopyOptions,
+    ] = useState<SetlistCopyOption[]>([])
+
+    const [
+        setlistCopySourceId,
+        setSetlistCopySourceId,
+    ] = useState('')
+
+    const [
+        loadingSetlistCopyOptions,
+        setLoadingSetlistCopyOptions,
+    ] = useState(false)
+
+    const [
+        copyingSetlist,
+        setCopyingSetlist,
+    ] = useState(false)
+
+    const [
+        pendingSetlistCopySourceId,
+        setPendingSetlistCopySourceId,
+    ] = useState('')
+
+    const [
+        showSetlistCopyConfirmDialog,
+        setShowSetlistCopyConfirmDialog,
+    ] = useState(false)
 
     const [memo, setMemo] = useState('')
     const [officialUrl, setOfficialUrl] = useState('')
@@ -868,6 +966,131 @@ export default function EventPage() {
         }
     }, [eventId, reloadKey])
 
+    useEffect(() => {
+        if (
+            !isEditing ||
+            !eventDate
+        ) {
+            setSetlistCopyOptions([])
+            setSetlistCopySourceId('')
+            return
+        }
+
+        let cancelled = false
+
+        async function loadSetlistCopyOptions() {
+            setLoadingSetlistCopyOptions(true)
+
+            const rangeStart =
+                shiftDateByMonths(
+                    eventDate,
+                    -1
+                )
+
+            const rangeEnd =
+                shiftDateByMonths(
+                    eventDate,
+                    1
+                )
+
+            const {
+                data,
+                error,
+            } = await supabase
+                .from('events')
+                .select(`
+                    id,
+                    event_date,
+                    title,
+                    subtitle,
+                    setlist_items!inner (
+                        id
+                    )
+                `)
+                .neq('id', eventId)
+                .gte(
+                    'event_date',
+                    rangeStart
+                )
+                .lte(
+                    'event_date',
+                    rangeEnd
+                )
+
+            if (cancelled) {
+                return
+            }
+
+            if (error) {
+                setSetlistCopyOptions([])
+                setLoadingSetlistCopyOptions(false)
+                return
+            }
+
+            const currentDate =
+                new Date(
+                    `${eventDate}T00:00:00Z`
+                ).getTime()
+
+            const options =
+                (data ?? [])
+                    .map((item) => ({
+                        id: item.id,
+                        eventDate:
+                            item.event_date,
+                        title:
+                            item.title,
+                        subtitle:
+                            item.subtitle ?? '',
+                    }))
+                    .sort((a, b) => {
+                        const distanceA =
+                            Math.abs(
+                                new Date(
+                                    `${a.eventDate}T00:00:00Z`
+                                ).getTime() -
+                                currentDate
+                            )
+
+                        const distanceB =
+                            Math.abs(
+                                new Date(
+                                    `${b.eventDate}T00:00:00Z`
+                                ).getTime() -
+                                currentDate
+                            )
+
+                        return (
+                            distanceA - distanceB ||
+                            b.eventDate.localeCompare(
+                                a.eventDate
+                            ) ||
+                            a.title.localeCompare(
+                                b.title,
+                                'ja'
+                            )
+                        )
+                    })
+
+            setSetlistCopyOptions(
+                options
+            )
+            setLoadingSetlistCopyOptions(
+                false
+            )
+        }
+
+        void loadSetlistCopyOptions()
+
+        return () => {
+            cancelled = true
+        }
+    }, [
+        isEditing,
+        eventDate,
+        eventId,
+    ])
+
     const isDirty = useMemo(() => {
         if (!initialSnapshot) {
             return false
@@ -1145,6 +1368,110 @@ export default function EventPage() {
             2,
             '0'
         )} (${weekday})`
+    }
+
+    function handleSetlistCopySelection(
+        sourceEventId: string
+    ) {
+        setSetlistCopySourceId(
+            sourceEventId
+        )
+
+        if (!sourceEventId) {
+            return
+        }
+
+        const hasSavedSetlist =
+            (
+                initialSnapshot
+                    ?.setlistItems
+                    .length ?? 0
+            ) > 0
+
+        const hasCurrentSetlistInput =
+            setlistItems.some(
+                (item) =>
+                    item.displayLabel.trim() !== '' ||
+                    item.title.trim() !== '' ||
+                    item.detail.trim() !== '' ||
+                    item.note.trim() !== ''
+            )
+
+        if (
+            hasSavedSetlist ||
+            hasCurrentSetlistInput
+        ) {
+            setPendingSetlistCopySourceId(
+                sourceEventId
+            )
+            setShowSetlistCopyConfirmDialog(
+                true
+            )
+            return
+        }
+
+        void copySetlistFromEvent(
+            sourceEventId
+        )
+    }
+
+    async function copySetlistFromEvent(
+        sourceEventId: string
+    ) {
+        if (!sourceEventId) {
+            return
+        }
+
+        setCopyingSetlist(true)
+        setErrorMessage('')
+
+        const {
+            data,
+            error,
+        } = await supabase
+            .from('setlist_items')
+            .select(
+                'position, display_label, title, detail, note'
+            )
+            .eq(
+                'event_id',
+                sourceEventId
+            )
+            .order(
+                'position',
+                {
+                    ascending: true,
+                }
+            )
+
+        if (error) {
+            setErrorMessage(
+                `SETLISTのコピーに失敗しました：${error.message}`
+            )
+            setCopyingSetlist(false)
+            setSetlistCopySourceId('')
+            return
+        }
+
+        setSetlistItems(
+            (data ?? []).map(
+                (item) => ({
+                    id:
+                        crypto.randomUUID(),
+                    displayLabel:
+                        item.display_label ?? '',
+                    title:
+                        item.title ?? '',
+                    detail:
+                        item.detail ?? '',
+                    note:
+                        item.note ?? '',
+                })
+            )
+        )
+
+        setCopyingSetlist(false)
+        setSetlistCopySourceId('')
     }
 
     function addSetlistItem() {
@@ -1692,6 +2019,45 @@ export default function EventPage() {
                 return
             }
 
+            const thumbnailPath =
+                getMainVisualThumbnailPath(
+                    newMainVisualPath
+                )
+
+            try {
+                const thumbnail =
+                    await createImageThumbnail(
+                        newMainVisual
+                    )
+
+                const {
+                    error: thumbnailUploadError,
+                } = await supabase.storage
+                    .from('event-images')
+                    .upload(
+                        thumbnailPath,
+                        thumbnail,
+                        {
+                            upsert: true,
+                            contentType: 'image/webp',
+                        }
+                    )
+
+                if (thumbnailUploadError) {
+                    await supabase.storage
+                        .from('event-images')
+                        .remove([
+                            thumbnailPath,
+                        ])
+                }
+            } catch {
+                await supabase.storage
+                    .from('event-images')
+                    .remove([
+                        thumbnailPath,
+                    ])
+            }
+
             const { error: pathUpdateError } =
                 await supabase
                     .from('events')
@@ -1716,7 +2082,12 @@ export default function EventPage() {
             ) {
                 await supabase.storage
                     .from('event-images')
-                    .remove([mainVisualPath])
+                    .remove([
+                        mainVisualPath,
+                        getMainVisualThumbnailPath(
+                            mainVisualPath
+                        ),
+                    ])
             }
         } else if (
             removeMainVisual &&
@@ -1740,7 +2111,12 @@ export default function EventPage() {
 
             await supabase.storage
                 .from('event-images')
-                .remove([mainVisualPath])
+                .remove([
+                    mainVisualPath,
+                    getMainVisualThumbnailPath(
+                        mainVisualPath
+                    ),
+                ])
         }
 
         /*
@@ -3711,6 +4087,64 @@ export default function EventPage() {
                                 >
                                     項目を追加
                                 </button>
+
+                                <div
+                                    className={
+                                        styles.setlistCopyArea
+                                    }
+                                >
+                                    <select
+                                        value={
+                                            setlistCopySourceId
+                                        }
+                                        onChange={(event) =>
+                                            handleSetlistCopySelection(
+                                                event.target.value
+                                            )
+                                        }
+                                        disabled={
+                                            loadingSetlistCopyOptions ||
+                                            copyingSetlist ||
+                                            setlistCopyOptions.length === 0
+                                        }
+                                        className={
+                                            styles.setlistCopySelect
+                                        }
+                                    >
+                                        <option value="">
+                                            {loadingSetlistCopyOptions
+                                                ? 'コピー元の公演を読み込み中...'
+                                                : copyingSetlist
+                                                    ? 'セットリストをコピー中...'
+                                                    : setlistCopyOptions.length === 0
+                                                        ? 'コピーできる公演がありません'
+                                                        : '別公演からセットリストをコピー'}
+                                        </option>
+
+                                        {setlistCopyOptions.map(
+                                            (option) => (
+                                                <option
+                                                    key={
+                                                        option.id
+                                                    }
+                                                    value={
+                                                        option.id
+                                                    }
+                                                >
+                                                    {option.eventDate.replaceAll(
+                                                        '-',
+                                                        '.'
+                                                    )}
+                                                    {' '}
+                                                    {option.title}
+                                                    {option.subtitle
+                                                        ? ` ${option.subtitle}`
+                                                        : ''}
+                                                </option>
+                                            )
+                                        )}
+                                    </select>
+                                </div>
                             </>
                         ) : (
                             <div className={styles.setlistDisplay}>
@@ -4048,6 +4482,27 @@ export default function EventPage() {
                     }
                 />
             )}
+
+            <ConfirmDialog
+                open={showSetlistCopyConfirmDialog}
+                message="現在のセットリストを置き換えますか？"
+                onCancel={() => {
+                    setShowSetlistCopyConfirmDialog(false)
+                    setPendingSetlistCopySourceId('')
+                    setSetlistCopySourceId('')
+                }}
+                onConfirm={() => {
+                    const sourceEventId =
+                        pendingSetlistCopySourceId
+
+                    setShowSetlistCopyConfirmDialog(false)
+                    setPendingSetlistCopySourceId('')
+
+                    void copySetlistFromEvent(
+                        sourceEventId
+                    )
+                }}
+            />
 
             <ConfirmDialog
                 open={showCancelEditConfirmDialog}

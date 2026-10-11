@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import EventListClient from '@/components/EventListClient'
+import {
+  getMainVisualThumbnailPath,
+} from '@/lib/image/mainVisualThumbnail'
 
 type HomeProps = {
   searchParams: Promise<{
@@ -287,16 +290,72 @@ export default async function Home({
   let nextEventImageUrl:
     string | null = null
 
+  let nextEventThumbnailMissing =
+    false
+
   if (
     nextEvent?.main_visual_path
   ) {
+    const thumbnailPath =
+      getMainVisualThumbnailPath(
+        nextEvent.main_visual_path
+      )
+
+    const slashIndex =
+      thumbnailPath.lastIndexOf('/')
+
+    const thumbnailDirectory =
+      slashIndex >= 0
+        ? thumbnailPath.slice(
+          0,
+          slashIndex
+        )
+        : ''
+
+    const thumbnailFileName =
+      slashIndex >= 0
+        ? thumbnailPath.slice(
+          slashIndex + 1
+        )
+        : thumbnailPath
+
+    const {
+      data: thumbnailFiles,
+    } =
+      await supabase.storage
+        .from('event-images')
+        .list(
+          thumbnailDirectory,
+          {
+            limit: 1,
+            search:
+              thumbnailFileName,
+          }
+        )
+
+    const hasThumbnail =
+      (thumbnailFiles ?? [])
+        .some(
+          (file) =>
+            file.name ===
+            thumbnailFileName
+        )
+
+    const imagePath =
+      hasThumbnail
+        ? thumbnailPath
+        : nextEvent.main_visual_path
+
+    nextEventThumbnailMissing =
+      !hasThumbnail
+
     const {
       data: signedImage,
     } =
       await supabase.storage
         .from('event-images')
         .createSignedUrl(
-          nextEvent.main_visual_path,
+          imagePath,
           60 * 60
         )
 
@@ -319,6 +378,13 @@ export default async function Home({
         mode="scheduled"
         featuredEvent={nextEvent}
         featuredImageUrl={nextEventImageUrl}
+        featuredImagePath={
+          nextEvent?.main_visual_path ??
+          null
+        }
+        featuredThumbnailMissing={
+          nextEventThumbnailMissing
+        }
       />
     </main>
   )

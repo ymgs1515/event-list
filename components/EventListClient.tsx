@@ -1,8 +1,9 @@
-﻿'use client'
+'use client'
 
 import {
     FormEvent,
     useEffect,
+    useMemo,
     useState,
     useLayoutEffect,
     useRef
@@ -21,6 +22,11 @@ import {
     saveListPosition,
 } from '@/lib/listNavigation'
 import AppHeaderPortal from '@/components/AppHeaderPortal'
+import { createClient } from '@/lib/supabase/client'
+import { createImageThumbnail } from '@/lib/image/compress'
+import {
+    getMainVisualThumbnailPath,
+} from '@/lib/image/mainVisualThumbnail'
 
 type Artist = {
     name: string
@@ -69,10 +75,13 @@ type Props = {
     events: EventItem[]
     selectedTags: string[]
     selectedKeyword: string
+    selectedArtistOnly?: boolean
     searchAliases: SearchAlias[]
     mode: 'scheduled' | 'archive'
     featuredEvent?: EventItem | null
     featuredImageUrl?: string | null
+    featuredImagePath?: string | null
+    featuredThumbnailMissing?: boolean
 }
 
 function EventTitle({
@@ -145,10 +154,13 @@ export default function EventListClient({
     events,
     selectedTags,
     selectedKeyword,
+    selectedArtistOnly = false,
     searchAliases,
     mode,
     featuredEvent = null,
     featuredImageUrl = null,
+    featuredImagePath = null,
+    featuredThumbnailMissing = false,
 }: Props) {
     const basePath =
         mode === 'archive'
@@ -156,6 +168,9 @@ export default function EventListClient({
             : '/'
 
     const router = useRouter()
+
+    const supabase =
+        useMemo(() => createClient(), [])
 
     useEffect(() => {
         restoreListPositionIfNeeded()
@@ -191,6 +206,83 @@ export default function EventListClient({
         }
     }, [router])
 
+    useEffect(() => {
+        if (
+            mode !== 'scheduled' ||
+            !featuredThumbnailMissing ||
+            !featuredImagePath
+        ) {
+            return
+        }
+
+        let cancelled = false
+
+        async function createMissingThumbnail() {
+            const {
+                data: mainVisualBlob,
+                error: downloadError,
+            } = await supabase.storage
+                .from('event-images')
+                .download(featuredImagePath!)
+
+            if (
+                cancelled ||
+                downloadError ||
+                !mainVisualBlob
+            ) {
+                return
+            }
+
+            try {
+                const sourceFile =
+                    new File(
+                        [mainVisualBlob],
+                        'main-visual.webp',
+                        {
+                            type:
+                                mainVisualBlob.type ||
+                                'image/webp',
+                        }
+                    )
+
+                const thumbnail =
+                    await createImageThumbnail(
+                        sourceFile
+                    )
+
+                if (cancelled) {
+                    return
+                }
+
+                await supabase.storage
+                    .from('event-images')
+                    .upload(
+                        getMainVisualThumbnailPath(
+                            featuredImagePath!
+                        ),
+                        thumbnail,
+                        {
+                            upsert: true,
+                            contentType: 'image/webp',
+                        }
+                    )
+            } catch {
+                // サムネイル生成に失敗しても元画像表示は継続する
+            }
+        }
+
+        void createMissingThumbnail()
+
+        return () => {
+            cancelled = true
+        }
+    }, [
+        mode,
+        featuredThumbnailMissing,
+        featuredImagePath,
+        supabase,
+    ])
+
     const [
         showFilter,
         setShowFilter,
@@ -210,6 +302,11 @@ export default function EventListClient({
         draftKeyword,
         setDraftKeyword,
     ] = useState('')
+
+    const [
+        draftArtistOnly,
+        setDraftArtistOnly,
+    ] = useState(false)
 
     const [
         expandedEventId,
@@ -249,6 +346,27 @@ export default function EventListClient({
         return value
             .trim()
             .toLocaleLowerCase()
+    }
+
+    function normalizeArtistSearchText(
+        value: string
+    ) {
+        return value
+            .toLocaleLowerCase()
+            .replace(/[\s\u3000]+/g, '')
+    }
+
+    function createArtistOnlyKeywords(
+        value: string
+    ) {
+        return value
+            .split(/[,、\n]+/)
+            .map((keyword) =>
+                normalizeArtistSearchText(
+                    keyword
+                )
+            )
+            .filter(Boolean)
     }
 
     function createKeywordCandidates(
@@ -420,6 +538,37 @@ export default function EventListClient({
     function matchesKeyword(
         event: EventItem
     ) {
+        if (selectedArtistOnly) {
+            const artistKeywords =
+                createArtistOnlyKeywords(
+                    selectedKeyword
+                )
+
+            if (
+                artistKeywords.length === 0
+            ) {
+                return true
+            }
+
+            const artistNames =
+                (event.event_artists ?? [])
+                    .map((artist) =>
+                        normalizeArtistSearchText(
+                            artist.name
+                        )
+                    )
+
+            return artistKeywords.some(
+                (keyword) =>
+                    artistNames.some(
+                        (artistName) =>
+                            artistName.includes(
+                                keyword
+                            )
+                    )
+            )
+        }
+
         const keywordCandidates =
             createKeywordCandidates(
                 selectedKeyword
@@ -469,7 +618,8 @@ export default function EventListClient({
 
     function buildHomeUrl(
         tags: string[],
-        keyword: string
+        keyword: string,
+        artistOnly = selectedArtistOnly
     ) {
         const params =
             new URLSearchParams()
@@ -489,6 +639,13 @@ export default function EventListClient({
                 'q',
                 trimmedKeyword
             )
+
+            if (artistOnly) {
+                params.set(
+                    'artistOnly',
+                    '1'
+                )
+            }
         }
 
         const query =
@@ -558,6 +715,9 @@ export default function EventListClient({
         setDraftKeyword(
             selectedKeyword
         )
+        setDraftArtistOnly(
+            selectedArtistOnly
+        )
 
         setShowFilter(false)
         setShowSearch(true)
@@ -565,6 +725,7 @@ export default function EventListClient({
 
     function clearSearch() {
         setDraftKeyword('')
+        setDraftArtistOnly(false)
     }
 
     function applySearch(
@@ -575,7 +736,8 @@ export default function EventListClient({
         const homeUrl =
             buildHomeUrl(
                 selectedTags,
-                draftKeyword
+                draftKeyword,
+                draftArtistOnly
             )
 
         setShowSearch(false)
@@ -734,20 +896,57 @@ export default function EventListClient({
                                 styles.popup
                             }
                         >
-                            <input
-                                type="text"
-                                autoFocus
-                                placeholder="キーワードを入力"
-                                value={draftKeyword}
-                                onChange={(event) =>
-                                    setDraftKeyword(
-                                        event.target.value
-                                    )
-                                }
+                            <label
                                 className={
-                                    styles.searchInput
+                                    styles.searchOption
                                 }
-                            />
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={
+                                        draftArtistOnly
+                                    }
+                                    onChange={(event) =>
+                                        setDraftArtistOnly(
+                                            event.target.checked
+                                        )
+                                    }
+                                />
+
+                                <span>
+                                    アーティスト欄のみ検索
+                                </span>
+                            </label>
+
+                            {draftArtistOnly ? (
+                                <textarea
+                                    autoFocus
+                                    rows={3}
+                                    placeholder="アーティスト名を入力"
+                                    value={draftKeyword}
+                                    onChange={(event) =>
+                                        setDraftKeyword(
+                                            event.target.value
+                                        )
+                                    }
+                                    className={`${styles.searchInput} ${styles.searchTextarea}`}
+                                />
+                            ) : (
+                                <input
+                                    type="text"
+                                    autoFocus
+                                    placeholder="キーワードを入力"
+                                    value={draftKeyword}
+                                    onChange={(event) =>
+                                        setDraftKeyword(
+                                            event.target.value
+                                        )
+                                    }
+                                    className={
+                                        styles.searchInput
+                                    }
+                                />
+                            )}
 
                             <div
                                 className={
