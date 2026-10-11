@@ -170,7 +170,7 @@
 
 .eventCard {
     display: grid;
-    grid-template-columns: 40px minmax(0, 1fr) auto;
+    grid-template-columns: 40px minmax(0, 1fr);
     align-items: center;
     gap: 10px;
 
@@ -267,13 +267,24 @@
     margin-top: 1px;
 }
 
-.eventCardVenue span,
-.eventCardArtists {
+.eventCardVenue span {
     min-width: 0;
 
     overflow-wrap: anywhere;
 }
 
-.eventCardArrow {
-    color: #888888;
+.eventCardArtists {
+    display: flex;
+    flex-wrap: wrap;
+
+    min-width: 0;
 }
+
+.eventCardArtistName {
+    min-width: 0;
+    max-width: 100%;
+
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+

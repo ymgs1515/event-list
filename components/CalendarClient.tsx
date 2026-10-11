@@ -8,7 +8,6 @@ import {
 } from 'react'
 import Link from 'next/link'
 import {
-    ChevronRight,
     MapPin,
     SquarePlus,
 } from 'lucide-react'
@@ -268,7 +267,7 @@ export default function CalendarClient({
 
             const latestEventMonth =
                 eventMonths[
-                eventMonths.length - 1
+                    eventMonths.length - 1
                 ] ??
                 currentMonth
 
@@ -290,7 +289,7 @@ export default function CalendarClient({
 
             const endMonth =
                 endCandidates[
-                endCandidates.length - 1
+                    endCandidates.length - 1
                 ] ??
                 currentMonth
 
@@ -697,6 +696,7 @@ export default function CalendarClient({
                                                                             {event.subtitle}
                                                                         </>
                                                                     )}
+
                                                                 </div>
 
                                                                 {(event.venue ||
@@ -732,29 +732,28 @@ export default function CalendarClient({
                                                                                             styles.eventCardArtists
                                                                                         }
                                                                                     >
-                                                                                        {artists
-                                                                                            .map(
-                                                                                                (
-                                                                                                    artist
-                                                                                                ) =>
-                                                                                                    artist.name
+                                                                                        {artists.map(
+                                                                                            (artist, index) => (
+                                                                                                <span
+                                                                                                    key={`${artist.name}-${index}`}
+                                                                                                    className={
+                                                                                                        styles.eventCardArtistName
+                                                                                                    }
+                                                                                                >
+                                                                                                    {artist.name}
+                                                                                                    {index <
+                                                                                                        artists.length - 1
+                                                                                                        ? '、'
+                                                                                                        : ''}
+                                                                                                </span>
                                                                                             )
-                                                                                            .join(
-                                                                                                '、'
-                                                                                            )}
+                                                                                        )}
                                                                                     </div>
                                                                                 )}
                                                                         </div>
                                                                     )}
                                                             </div>
 
-                                                            <ChevronRight
-                                                                size={18}
-                                                                strokeWidth={1.8}
-                                                                className={
-                                                                    styles.eventCardArrow
-                                                                }
-                                                            />
                                                         </Link>
                                                     )
                                                 }
