@@ -125,6 +125,7 @@ function shiftDateByMonths(
 
 type EditSnapshot = {
     eventDate: string
+    isTentative: boolean
     title: string
     subtitle: string
     mainVisualPositionX: number
@@ -170,6 +171,7 @@ export default function EventPage() {
     ] = useState<EditSnapshot | null>(null)
 
     const [eventDate, setEventDate] = useState('')
+    const [isTentative, setIsTentative] = useState(false)
     const [title, setTitle] = useState('')
     const [subtitle, setSubtitle] = useState('')
     const titleDisplayRef =
@@ -461,6 +463,7 @@ export default function EventPage() {
                     .select(`
                     id,
                     event_date,
+                    is_tentative,
                     title,
                     subtitle,
                     seat_block_row,
@@ -598,6 +601,10 @@ export default function EventPage() {
 
             setEventDate(
                 eventData.event_date ?? ''
+            )
+
+            setIsTentative(
+                eventData.is_tentative ?? false
             )
 
             setTitle(
@@ -876,6 +883,9 @@ export default function EventPage() {
                 eventDate:
                     eventData.event_date ?? '',
 
+                isTentative:
+                    eventData.is_tentative ?? false,
+
                 title:
                     eventData.title ?? '',
 
@@ -1098,6 +1108,7 @@ export default function EventPage() {
 
         const currentSnapshot: EditSnapshot = {
             eventDate,
+            isTentative,
             title,
             subtitle,
             mainVisualPositionX,
@@ -1198,6 +1209,7 @@ export default function EventPage() {
     }, [
         initialSnapshot,
         eventDate,
+        isTentative,
         title,
         subtitle,
         mainVisualPositionX,
@@ -1941,6 +1953,7 @@ export default function EventPage() {
                 .from('events')
                 .update({
                     event_date: eventDate,
+                    is_tentative: isTentative,
                     title: title.trim(),
                     subtitle: subtitle.trim() || null,
 
@@ -2940,6 +2953,14 @@ export default function EventPage() {
                         : ''
                         }`}
                 >
+                    {!isEditing && isTentative && (
+                        <span
+                            className={styles.tentativeBadge}
+                        >
+                            未確定
+                        </span>
+                    )}
+
                     <div className={styles.dateTitleGrid}>
                         <div>
                             <div className={styles.fieldLabel}>
@@ -2947,18 +2968,38 @@ export default function EventPage() {
                             </div>
 
                             {isEditing ? (
-                                <input
-                                    id="event-date"
-                                    type="date"
-                                    value={eventDate}
-                                    onChange={(event) =>
-                                        setEventDate(
-                                            event.target.value
-                                        )
-                                    }
-                                    required
-                                    className={`${styles.input} ${styles.dateInput}`}
-                                />
+                                <>
+                                    <input
+                                        id="event-date"
+                                        type="date"
+                                        value={eventDate}
+                                        onChange={(event) =>
+                                            setEventDate(
+                                                event.target.value
+                                            )
+                                        }
+                                        required
+                                        className={`${styles.input} ${styles.dateInput}`}
+                                    />
+
+                                    <label
+                                        className={styles.tentativeCheckbox}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={isTentative}
+                                            onChange={(event) =>
+                                                setIsTentative(
+                                                    event.target.checked
+                                                )
+                                            }
+                                        />
+
+                                        <span>
+                                            未確定
+                                        </span>
+                                    </label>
+                                </>
                             ) : (
                                 <div className={styles.dateDisplay}>
                                     <span>

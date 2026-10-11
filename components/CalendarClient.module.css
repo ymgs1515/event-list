@@ -156,6 +156,10 @@
     border-radius: 50%;
 }
 
+.eventDotTentative {
+    background: #e7a2a2;
+}
+
 .eventList {
     display: flex;
     flex-direction: column;
@@ -180,6 +184,11 @@
     border-radius: 8px;
 
     text-decoration: none;
+}
+
+.eventCardTentative {
+    background: #fff1f1;
+    border-color: #f1cdcd;
 }
 
 .eventCardDate {
@@ -212,6 +221,23 @@
     line-height: 1.35;
 
     overflow-wrap: anywhere;
+}
+
+.tentativeCardBadge {
+    display: inline-block;
+    align-self: flex-start;
+
+    margin-bottom: 2px;
+    padding: 1px 5px;
+
+    color: #b55f5f;
+
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 1.4;
+
+    background: #f9dcdc;
+    border-radius: 999px;
 }
 
 .eventCardMeta {

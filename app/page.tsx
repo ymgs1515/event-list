@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+﻿import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import EventListClient from '@/components/EventListClient'
 import {
@@ -156,6 +156,7 @@ export default async function Home({
                 event_date,
                 title,
                 subtitle,
+                is_tentative,
                 venue,
                 seat_block_row,
                 seat_number,
@@ -185,6 +186,10 @@ export default async function Home({
       .gte(
         'event_date',
         todayJst
+      )
+      .eq(
+        'is_tentative',
+        false
       )
       .order(
         'event_date',

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import {
     ChangeEvent,
@@ -73,6 +73,7 @@ function NewEventPageContent() {
         useMemo(() => createClient(), [])
 
     const [eventDate, setEventDate] = useState('')
+    const [isTentative, setIsTentative] = useState(false)
     const [title, setTitle] = useState('')
     const [subtitle, setSubtitle] = useState('')
 
@@ -145,6 +146,7 @@ function NewEventPageContent() {
                         .from('events')
                         .select(`
                             event_date,
+                            is_tentative,
                             title,
                             subtitle,
                             seat_type,
@@ -267,6 +269,9 @@ function NewEventPageContent() {
                 setEventDate(
                     eventData.event_date ?? ''
                 )
+                setIsTentative(
+                    eventData.is_tentative ?? false
+                )
                 setTitle(
                     eventData.title ?? ''
                 )
@@ -380,6 +385,7 @@ function NewEventPageContent() {
     const isDirty = useMemo(() => {
         return (
             eventDate !== '' ||
+            isTentative ||
             title !== '' ||
             subtitle !== '' ||
             mainVisual !== null ||
@@ -400,6 +406,7 @@ function NewEventPageContent() {
         )
     }, [
         eventDate,
+        isTentative,
         title,
         subtitle,
         mainVisual,
@@ -839,6 +846,7 @@ function NewEventPageContent() {
                 .insert({
                     user_id: user.id,
                     event_date: eventDate,
+                    is_tentative: isTentative,
                     title: title.trim(),
                     subtitle: subtitle.trim() || null,
 
@@ -1305,6 +1313,24 @@ function NewEventPageContent() {
                                 required
                                 className={`${styles.input} ${styles.dateInput}`}
                             />
+
+                            <label
+                                className={styles.tentativeCheckbox}
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={isTentative}
+                                    onChange={(event) =>
+                                        setIsTentative(
+                                            event.target.checked
+                                        )
+                                    }
+                                />
+
+                                <span>
+                                    未確定
+                                </span>
+                            </label>
                         </div>
 
                         <div>

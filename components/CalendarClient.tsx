@@ -28,6 +28,7 @@ type CalendarEvent = {
     event_date: string
     title: string
     subtitle: string | null
+    is_tentative: boolean
     venue: string | null
     start_time: string | null
     event_artists: Artist[]
@@ -267,7 +268,7 @@ export default function CalendarClient({
 
             const latestEventMonth =
                 eventMonths[
-                    eventMonths.length - 1
+                eventMonths.length - 1
                 ] ??
                 currentMonth
 
@@ -289,7 +290,7 @@ export default function CalendarClient({
 
             const endMonth =
                 endCandidates[
-                    endCandidates.length - 1
+                endCandidates.length - 1
                 ] ??
                 currentMonth
 
@@ -506,9 +507,6 @@ export default function CalendarClient({
                                                     date
                                                 ) ?? []
 
-                                            const eventCount =
-                                                dayEvents.length
-
                                             const isSelected =
                                                 date ===
                                                 selectedDate
@@ -563,23 +561,26 @@ export default function CalendarClient({
                                                             styles.eventDotArea
                                                         }
                                                     >
-                                                        {Array.from(
-                                                            {
-                                                                length:
-                                                                    eventCount,
-                                                            }
-                                                        ).map(
+                                                        {dayEvents.map(
                                                             (
-                                                                _,
-                                                                dotIndex
+                                                                dayEvent
                                                             ) => (
                                                                 <span
                                                                     key={
-                                                                        dotIndex
+                                                                        dayEvent.id
                                                                     }
-                                                                    className={
-                                                                        styles.eventDot
-                                                                    }
+                                                                    className={[
+                                                                        styles.eventDot,
+                                                                        dayEvent.is_tentative
+                                                                            ? styles.eventDotTentative
+                                                                            : '',
+                                                                    ]
+                                                                        .filter(
+                                                                            Boolean
+                                                                        )
+                                                                        .join(
+                                                                            ' '
+                                                                        )}
                                                                 />
                                                             )
                                                         )}
@@ -632,15 +633,34 @@ export default function CalendarClient({
                                                             onClick={
                                                                 saveListPosition
                                                             }
-                                                            className={
-                                                                styles.eventCard
-                                                            }
+                                                            className={[
+                                                                styles.eventCard,
+                                                                event.is_tentative
+                                                                    ? styles.eventCardTentative
+                                                                    : '',
+                                                            ]
+                                                                .filter(
+                                                                    Boolean
+                                                                )
+                                                                .join(
+                                                                    ' '
+                                                                )}
                                                         >
                                                             <div
                                                                 className={
                                                                     styles.eventCardDate
                                                                 }
                                                             >
+                                                                {event.is_tentative && (
+                                                                    <span
+                                                                        className={
+                                                                            styles.tentativeCardBadge
+                                                                        }
+                                                                    >
+                                                                        未確定
+                                                                    </span>
+                                                                )}
+
                                                                 {formatEventDate(
                                                                     event.event_date
                                                                 )}

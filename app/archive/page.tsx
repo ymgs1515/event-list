@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+﻿import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import EventListClient from '@/components/EventListClient'
 
@@ -174,6 +174,7 @@ export default async function Archive({
                 event_date,
                 title,
                 subtitle,
+                is_tentative,
                 venue,
                 seat_block_row,
                 seat_number,
@@ -199,6 +200,10 @@ export default async function Archive({
             .lte(
                 'event_date',
                 todayJst
+            )
+            .eq(
+                'is_tentative',
+                false
             )
             .order(
                 'event_date',

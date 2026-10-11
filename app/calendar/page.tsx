@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+﻿import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import CalendarClient from '@/components/CalendarClient'
 
@@ -75,6 +75,7 @@ export default async function CalendarPage({
             event_date,
             title,
             subtitle,
+            is_tentative,
             venue,
             start_time,
             event_artists (
