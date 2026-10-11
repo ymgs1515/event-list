@@ -1,6 +1,7 @@
 ﻿import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import CalendarClient from '@/components/CalendarClient'
+import { getJapaneseHolidayDates } from '@/lib/japaneseHolidays'
 
 type CalendarPageProps = {
     searchParams: Promise<{
@@ -111,6 +112,9 @@ export default async function CalendarPage({
         )
     }
 
+    const holidayDates =
+        await getJapaneseHolidayDates()
+
     const todayJst =
         getTodayJst()
 
@@ -135,6 +139,9 @@ export default async function CalendarPage({
         <CalendarClient
             events={
                 events ?? []
+            }
+            holidayDates={
+                holidayDates
             }
             todayJst={
                 todayJst

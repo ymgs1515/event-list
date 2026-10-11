@@ -35,6 +35,7 @@ type CalendarEvent = {
 
 type Props = {
     events: CalendarEvent[]
+    holidayDates: string[]
     todayJst: string
     initialDate: string
 }
@@ -186,9 +187,16 @@ function formatEventDate(
 
 export default function CalendarClient({
     events,
+    holidayDates,
     todayJst,
     initialDate,
 }: Props) {
+    const holidayDateSet =
+        useMemo(
+            () => new Set(holidayDates),
+            [holidayDates]
+        )
+
     const [
         selectedDate,
         setSelectedDate,
@@ -501,6 +509,9 @@ export default function CalendarClient({
                                             const weekdayIndex =
                                                 index % 7
 
+                                            const isHoliday =
+                                                holidayDateSet.has(date)
+
                                             const dayEvents =
                                                 eventsByDate.get(
                                                     date
@@ -527,10 +538,10 @@ export default function CalendarClient({
                                                     }
                                                     className={[
                                                         styles.dayButton,
-                                                        weekdayIndex === 0
+                                                        weekdayIndex === 0 || isHoliday
                                                             ? styles.sunday
                                                             : '',
-                                                        weekdayIndex === 6
+                                                        weekdayIndex === 6 && !isHoliday
                                                             ? styles.saturday
                                                             : '',
                                                         isSelected
