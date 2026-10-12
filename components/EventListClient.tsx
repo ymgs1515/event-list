@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import {
     FormEvent,
@@ -66,6 +66,7 @@ type EventItem = {
     ticket_price: string | null
     memo: string | null
     created_at: string
+    guests: string[]
     event_artists: Artist[]
     event_hashtags: Hashtag[]
     setlist_items: SetlistItem[]
@@ -348,7 +349,7 @@ export default function EventListClient({
             .toLocaleLowerCase()
     }
 
-    function normalizeArtistSearchText(
+    function normalizePerformerSearchText(
         value: string
     ) {
         return value
@@ -356,13 +357,13 @@ export default function EventListClient({
             .replace(/[\s\u3000]+/g, '')
     }
 
-    function createArtistOnlyKeywords(
+    function createPerformerOnlyKeywords(
         value: string
     ) {
         return value
             .split(/[,、\n]+/)
             .map((keyword) =>
-                normalizeArtistSearchText(
+                normalizePerformerSearchText(
                     keyword
                 )
             )
@@ -513,6 +514,7 @@ export default function EventListClient({
                 event.ticket_price ?? '',
                 event.memo ?? '',
                 artists,
+                ...(event.guests ?? []),
                 hashtags,
                 setlist,
             ].join(' ')
@@ -539,30 +541,31 @@ export default function EventListClient({
         event: EventItem
     ) {
         if (selectedArtistOnly) {
-            const artistKeywords =
-                createArtistOnlyKeywords(
+            const performerKeywords =
+                createPerformerOnlyKeywords(
                     selectedKeyword
                 )
 
             if (
-                artistKeywords.length === 0
+                performerKeywords.length === 0
             ) {
                 return true
             }
 
-            const artistNames =
-                (event.event_artists ?? [])
-                    .map((artist) =>
-                        normalizeArtistSearchText(
-                            artist.name
-                        )
-                    )
+            const performerNames = [
+                ...(event.event_artists ?? []).map(
+                    (artist) => artist.name
+                ),
+                ...(event.guests ?? []),
+            ].map((name) =>
+                normalizePerformerSearchText(name)
+            )
 
-            return artistKeywords.some(
+            return performerKeywords.some(
                 (keyword) =>
-                    artistNames.some(
-                        (artistName) =>
-                            artistName.includes(
+                    performerNames.some(
+                        (performerName) =>
+                            performerName.includes(
                                 keyword
                             )
                     )
@@ -914,7 +917,7 @@ export default function EventListClient({
                                 />
 
                                 <span>
-                                    アーティスト欄のみ検索
+                                    出演者のみ検索
                                 </span>
                             </label>
 
@@ -922,7 +925,7 @@ export default function EventListClient({
                                 <textarea
                                     autoFocus
                                     rows={3}
-                                    placeholder="アーティスト名を入力"
+                                    placeholder="出演者名を入力"
                                     value={draftKeyword}
                                     onChange={(event) =>
                                         setDraftKeyword(
@@ -1272,6 +1275,8 @@ export default function EventListClient({
                                                     a.sort_order - b.sort_order
                                             )
 
+                                            const guests = event.guests ?? []
+
                                             const detailUrl =
                                                 `/events/${event.id}` +
                                                 `?returnTo=${encodeURIComponent(
@@ -1322,7 +1327,8 @@ export default function EventListClient({
                                                         >
                                                             {(event.venue ||
                                                                 event.subtitle ||
-                                                                artists.length > 0) && (
+                                                                artists.length > 0 ||
+                                                                guests.length > 0) && (
                                                                     <div
                                                                         className={
                                                                             styles.eventDetails
@@ -1393,6 +1399,44 @@ export default function EventListClient({
                                                                                                     {artist.name}
                                                                                                     {index <
                                                                                                         artists.length - 1
+                                                                                                        ? '、'
+                                                                                                        : ''}
+                                                                                                </span>
+                                                                                            )
+                                                                                        )}
+                                                                                    </span>
+                                                                                </div>
+                                                                            )}
+
+                                                                        {guests.length >
+                                                                            0 && (
+                                                                                <div
+                                                                                    className={
+                                                                                        styles.detailRow
+                                                                                    }
+                                                                                >
+                                                                                    <span
+                                                                                        className={
+                                                                                            styles.detailLabel
+                                                                                        }
+                                                                                    >
+                                                                                        Guest
+                                                                                    </span>
+
+                                                                                    <span
+                                                                                        className={`${styles.detailValue} ${styles.artistList}`}
+                                                                                    >
+                                                                                        {guests.map(
+                                                                                            (guest, index) => (
+                                                                                                <span
+                                                                                                    key={`${guest}-${index}`}
+                                                                                                    className={
+                                                                                                        styles.artistName
+                                                                                                    }
+                                                                                                >
+                                                                                                    {guest}
+                                                                                                    {index <
+                                                                                                        guests.length - 1
                                                                                                         ? '、'
                                                                                                         : ''}
                                                                                                 </span>

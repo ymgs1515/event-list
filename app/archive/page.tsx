@@ -183,6 +183,7 @@ export default async function Archive({
                 ticket_price,
                 memo,
                 created_at,
+                guests,
                 event_artists (
                     name,
                     sort_order

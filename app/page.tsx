@@ -169,6 +169,7 @@ export default async function Home({
                 ticket_price,
                 memo,
                 created_at,
+                guests,
                 event_artists (
                     name,
                     sort_order

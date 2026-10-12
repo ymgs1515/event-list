@@ -105,6 +105,9 @@ function NewEventPageContent() {
     const [artists, setArtists] = useState<string[]>([])
     const [artistInput, setArtistInput] = useState('')
 
+    const [guests, setGuests] = useState<string[]>([])
+    const [guestInput, setGuestInput] = useState('')
+
     const [hashtags, setHashtags] = useState<string[]>([])
     const [hashtagInput, setHashtagInput] = useState('')
 
@@ -156,6 +159,7 @@ function NewEventPageContent() {
                             ticket_price,
                             memo,
                             official_url,
+                            guests,
                             main_visual_path,
                             main_visual_position_x,
                             main_visual_position_y
@@ -343,6 +347,8 @@ function NewEventPageContent() {
                     )
                 )
 
+                setGuests(eventData.guests ?? [])
+
                 setArtists(
                     (artistResult.data ?? []).map(
                         (item) => item.name
@@ -400,6 +406,7 @@ function NewEventPageContent() {
             officialUrl !== '' ||
             setlistItems.length > 0 ||
             artists.length > 0 ||
+            guests.length > 0 ||
             hashtags.length > 0 ||
             officialPhotos.length > 0 ||
             personalPhotos.length > 0
@@ -421,6 +428,7 @@ function NewEventPageContent() {
         officialUrl,
         setlistItems,
         artists,
+        guests,
         hashtags,
         officialPhotos,
         personalPhotos,
@@ -716,6 +724,45 @@ function NewEventPageContent() {
         )
     }
 
+    function addGuest() {
+        const values =
+            guestInput
+                .split(/\r?\n/)
+                .map((value) => value.trim())
+                .filter((value) => value !== '')
+
+        if (values.length === 0) {
+            return
+        }
+
+        setGuests((current) => {
+            const result = [...current]
+
+            for (const value of values) {
+                const alreadyExists =
+                    result.some(
+                        (guest) =>
+                            guest.toLowerCase() ===
+                            value.toLowerCase()
+                    )
+
+                if (!alreadyExists) {
+                    result.push(value)
+                }
+            }
+
+            return result
+        })
+
+        setGuestInput('')
+    }
+
+    function deleteGuest(index: number) {
+        setGuests((current) =>
+            current.filter((_, currentIndex) => currentIndex !== index)
+        )
+    }
+
     function addHashtag() {
         const value = hashtagInput.trim()
 
@@ -861,6 +908,7 @@ function NewEventPageContent() {
                         ticketPrice.trim() || null,
                     memo: memo.trim() || null,
                     official_url: officialUrl.trim() || null,
+                    guests,
                 })
                 .select('id')
                 .single()
@@ -2106,6 +2154,58 @@ function NewEventPageContent() {
                             <button
                                 type="button"
                                 onClick={addArtist}
+                                className={styles.artistAddButton}
+                            >
+                                追加
+                            </button>
+                        </div>
+                    </>
+                </section>
+
+                <section className={styles.block}>
+                    <div className={styles.blockHeader}>
+                        <h2 className={styles.blockTitle}>
+                            GUEST
+                        </h2>
+
+                    </div>
+                    <>
+                        <div className={styles.artistList}>
+                            {guests.map((guest, index) => (
+                                <span
+                                    key={`${guest}-${index}`}
+                                    className={`${styles.artistChip} ${styles.artistChipEdit}`}
+                                >
+                                    {guest}
+
+                                    <button
+                                        type="button"
+                                        className={styles.artistDelete}
+                                        onClick={() =>
+                                            deleteGuest(index)
+                                        }
+                                        aria-label={`${guest}を削除`}
+                                    >
+                                        ×
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+
+                        <div className={styles.artistEditor}>
+                            <textarea
+                                placeholder="ゲスト（1行につき1名）"
+                                value={guestInput}
+                                onChange={(event) =>
+                                    setGuestInput(event.target.value)
+                                }
+                                rows={1}
+                                className={styles.artistInput}
+                            />
+
+                            <button
+                                type="button"
+                                onClick={addGuest}
                                 className={styles.artistAddButton}
                             >
                                 追加

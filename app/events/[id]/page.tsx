@@ -146,6 +146,7 @@ type EditSnapshot = {
         note: string
     }[]
     artists: string[]
+    guests: string[]
     hashtags: string[]
 }
 
@@ -416,6 +417,9 @@ export default function EventPage() {
     const [artists, setArtists] = useState<string[]>([])
     const [artistInput, setArtistInput] = useState('')
 
+    const [guests, setGuests] = useState<string[]>([])
+    const [guestInput, setGuestInput] = useState('')
+
     const [hashtags, setHashtags] = useState<string[]>([])
     const [hashtagInput, setHashtagInput] = useState('')
 
@@ -515,6 +519,7 @@ export default function EventPage() {
                     ticket_price,
                     memo,
                     official_url,
+                    guests,
                     main_visual_path,
                     main_visual_position_x,
                     main_visual_position_y
@@ -741,6 +746,9 @@ export default function EventPage() {
             setArtists(
                 loadedArtists
             )
+
+            const loadedGuests: string[] = eventData.guests ?? []
+            setGuests(loadedGuests)
 
             /*
              * HASHTAG
@@ -991,6 +999,9 @@ export default function EventPage() {
                 artists:
                     loadedArtists,
 
+                guests:
+                    loadedGuests,
+
                 hashtags:
                     loadedHashtags,
             })
@@ -1161,6 +1172,7 @@ export default function EventPage() {
                 })),
 
             artists,
+            guests,
             hashtags,
         }
 
@@ -1254,6 +1266,7 @@ export default function EventPage() {
         officialUrl,
         setlistItems,
         artists,
+        guests,
         hashtags,
         newMainVisual,
         removeMainVisual,
@@ -1622,6 +1635,48 @@ export default function EventPage() {
 
     function deleteArtist(index: number) {
         setArtists((current) =>
+            current.filter(
+                (_, currentIndex) =>
+                    currentIndex !== index
+            )
+        )
+    }
+
+    function addGuest() {
+        const values =
+            guestInput
+                .split(/\r?\n/)
+                .map((value) => value.trim())
+                .filter((value) => value !== '')
+
+        if (values.length === 0) {
+            return
+        }
+
+        setGuests((current) => {
+            const result = [...current]
+
+            for (const value of values) {
+                const alreadyExists =
+                    result.some(
+                        (guest) =>
+                            guest.toLowerCase() ===
+                            value.toLowerCase()
+                    )
+
+                if (!alreadyExists) {
+                    result.push(value)
+                }
+            }
+
+            return result
+        })
+
+        setGuestInput('')
+    }
+
+    function deleteGuest(index: number) {
+        setGuests((current) =>
             current.filter(
                 (_, currentIndex) =>
                     currentIndex !== index
@@ -2006,6 +2061,8 @@ export default function EventPage() {
 
                     official_url:
                         officialUrl.trim() || null,
+
+                    guests,
                 })
                 .eq('id', eventId)
 
@@ -2693,6 +2750,7 @@ export default function EventPage() {
         setDeletedPhotoIds([])
 
         setArtistInput('')
+        setGuestInput('')
         setHashtagInput('')
         setErrorMessage('')
 
@@ -2843,6 +2901,9 @@ export default function EventPage() {
 
     const hasArtists =
         artists.length > 0
+
+    const hasGuests =
+        guests.length > 0
 
     function getDisplayDomain(url: string) {
         try {
@@ -4387,6 +4448,73 @@ export default function EventPage() {
                                         className={styles.artistChip}
                                     >
                                         {artist}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </section>
+                )}
+
+                {(isEditing || hasGuests) && (
+                    <section className={styles.block}>
+                        <div className={styles.blockHeader}>
+                            <h2 className={styles.blockTitle}>
+                                GUEST
+                            </h2>
+                        </div>
+
+                        {isEditing ? (
+                            <>
+                                <div className={styles.artistList}>
+                                    {guests.map((guest, index) => (
+                                        <span
+                                            key={`${guest}-${index}`}
+                                            className={`${styles.artistChip} ${styles.artistChipEdit}`}
+                                        >
+                                            {guest}
+
+                                            <button
+                                                type="button"
+                                                className={styles.artistDelete}
+                                                onClick={() =>
+                                                    deleteGuest(index)
+                                                }
+                                                aria-label={`${guest}を削除`}
+                                            >
+                                                ×
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+
+                                <div className={styles.artistEditor}>
+                                    <textarea
+                                        placeholder="ゲスト（1行につき1名）"
+                                        value={guestInput}
+                                        onChange={(event) =>
+                                            setGuestInput(event.target.value)
+                                        }
+                                        rows={1}
+                                        className={styles.artistInput}
+                                    />
+
+                                    <button
+                                        type="button"
+                                        onClick={addGuest}
+                                        className={styles.artistAddButton}
+                                    >
+                                        追加
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <div className={styles.artistList}>
+                                {guests.map((guest, index) => (
+                                    <span
+                                        key={`${guest}-${index}`}
+                                        className={styles.artistChip}
+                                    >
+                                        {guest}
                                     </span>
                                 ))}
                             </div>

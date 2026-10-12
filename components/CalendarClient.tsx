@@ -30,6 +30,7 @@ type CalendarEvent = {
     is_tentative: boolean
     venue: string | null
     start_time: string | null
+    guests: string[]
     event_artists: Artist[]
 }
 
@@ -627,6 +628,9 @@ export default function CalendarClient({
                                                                 b.sort_order
                                                         )
 
+                                                    const guests =
+                                                        event.guests ?? []
+
                                                     const detailUrl =
                                                         `/events/${event.id}?returnTo=${encodeURIComponent(
                                                             selectedReturnTo
@@ -711,8 +715,8 @@ export default function CalendarClient({
                                                                 </div>
 
                                                                 {(event.venue ||
-                                                                    artists.length >
-                                                                    0) && (
+                                                                    artists.length > 0 ||
+                                                                    guests.length > 0) && (
                                                                         <div
                                                                             className={
                                                                                 styles.eventCardMeta
@@ -736,8 +740,8 @@ export default function CalendarClient({
                                                                                 </div>
                                                                             )}
 
-                                                                            {artists.length >
-                                                                                0 && (
+                                                                            {(artists.length > 0 ||
+                                                                                guests.length > 0) && (
                                                                                     <div
                                                                                         className={
                                                                                             styles.eventCardArtists
@@ -754,6 +758,25 @@ export default function CalendarClient({
                                                                                                     {artist.name}
                                                                                                     {index <
                                                                                                         artists.length - 1
+                                                                                                        ? '、'
+                                                                                                        : ''}
+                                                                                                </span>
+                                                                                            )
+                                                                                        )}
+
+                                                                                        {guests.map(
+                                                                                            (guest, index) => (
+                                                                                                <span
+                                                                                                    key={`guest-${index}`}
+                                                                                                    className={
+                                                                                                        styles.eventCardArtistName
+                                                                                                    }
+                                                                                                >
+                                                                                                    {index === 0
+                                                                                                        ? `${artists.length > 0 ? '　' : ''}［ゲスト］`
+                                                                                                        : ''}
+                                                                                                    {guest}
+                                                                                                    {index < guests.length - 1
                                                                                                         ? '、'
                                                                                                         : ''}
                                                                                                 </span>

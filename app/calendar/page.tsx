@@ -78,6 +78,7 @@ export default async function CalendarPage({
             subtitle,
             is_tentative,
             venue,
+            guests,
             start_time,
             event_artists (
                 name,
