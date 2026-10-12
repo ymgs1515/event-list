@@ -360,21 +360,26 @@ export default function EventListClient({
     function createPerformerOnlyKeywords(
         value: string
     ) {
-        return value
-            .split(/[,、\n]+/)
-            .map((keyword) =>
-                normalizePerformerSearchText(
-                    keyword
-                )
+        return Array.from(
+            new Set(
+                value
+                    .split(/[,、\n]+/)
+                    .flatMap((keyword) =>
+                        createKeywordCandidates(
+                            keyword,
+                            normalizePerformerSearchText
+                        )
+                    )
             )
-            .filter(Boolean)
+        )
     }
 
     function createKeywordCandidates(
-        value: string
+        value: string,
+        normalize: (value: string) => string = normalizeSearchText
     ) {
         const keyword =
-            normalizeSearchText(value)
+            normalize(value)
 
         if (!keyword) {
             return []
@@ -390,12 +395,12 @@ export default function EventListClient({
 
         for (const alias of searchAliases) {
             const canonical =
-                normalizeSearchText(
+                normalize(
                     alias.canonical_text
                 )
 
             const alternative =
-                normalizeSearchText(
+                normalize(
                     alias.alias_text
                 )
 
@@ -414,12 +419,12 @@ export default function EventListClient({
 
         for (const alias of searchAliases) {
             const canonical =
-                normalizeSearchText(
+                normalize(
                     alias.canonical_text
                 )
 
             const alternative =
-                normalizeSearchText(
+                normalize(
                     alias.alias_text
                 )
 
