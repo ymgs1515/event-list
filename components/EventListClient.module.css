@@ -208,6 +208,10 @@
     padding-right: var(--page-gutter);
 }
 
+.scheduledEventList {
+    gap: 6px;
+}
+
 .eventCard {
     padding: 0;
 

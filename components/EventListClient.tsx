@@ -15,8 +15,10 @@ import {
     Search,
     SquarePlus,
     ChevronRight,
+    MapPin,
 } from 'lucide-react'
 import styles from './EventListClient.module.css'
+import calendarStyles from './CalendarClient.module.css'
 import {
     restoreListPositionIfNeeded,
     saveListPosition,
@@ -52,6 +54,7 @@ type SearchAlias = {
 type EventItem = {
     id: string
     event_date: string
+    is_tentative?: boolean
     doors_time?: string | null
     main_visual_path?: string | null
     main_visual_position_x?: number | null
@@ -1269,7 +1272,9 @@ export default function EventListClient({
 
                                     <div
                                         className={
-                                            styles.eventList
+                                            mode === 'scheduled'
+                                                ? `${styles.eventList} ${styles.scheduledEventList}`
+                                                : styles.eventList
                                         }
                                     >
                                         {yearEvents.map((event) => {
@@ -1290,6 +1295,94 @@ export default function EventListClient({
 
                                             const isExpanded =
                                                 expandedEventId === event.id
+
+                                            if (mode === 'scheduled') {
+                                                return (
+                                                    <Link
+                                                        key={event.id}
+                                                        href={detailUrl}
+                                                        onClick={saveListPosition}
+                                                        className={[
+                                                            calendarStyles.eventCard,
+                                                            event.is_tentative
+                                                                ? calendarStyles.eventCardTentative
+                                                                : '',
+                                                        ]
+                                                            .filter(Boolean)
+                                                            .join(' ')}
+                                                    >
+                                                        <div className={calendarStyles.eventCardDate}>
+                                                            {event.is_tentative && (
+                                                                <span className={calendarStyles.tentativeCardBadge}>
+                                                                    未確定
+                                                                </span>
+                                                            )}
+
+                                                            {formatEventDate(event.event_date)}
+
+                                                            {event.start_time && (
+                                                                <span className={calendarStyles.eventCardTime}>
+                                                                    {event.start_time.slice(0, 5)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        <div className={calendarStyles.eventCardBody}>
+                                                            <div className={calendarStyles.eventCardTitle}>
+                                                                {event.title}
+                                                                {event.subtitle && (
+                                                                    <>
+                                                                        {' '}
+                                                                        {event.subtitle}
+                                                                    </>
+                                                                )}
+                                                            </div>
+
+                                                            {(event.venue || artists.length > 0 || guests.length > 0) && (
+                                                                <div className={calendarStyles.eventCardMeta}>
+                                                                    {event.venue && (
+                                                                        <div className={calendarStyles.eventCardVenue}>
+                                                                            <MapPin
+                                                                                size={11}
+                                                                                strokeWidth={2}
+                                                                                aria-hidden="true"
+                                                                            />
+                                                                            <span>{event.venue}</span>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {(artists.length > 0 || guests.length > 0) && (
+                                                                        <div className={calendarStyles.eventCardArtists}>
+                                                                            {artists.map((artist, index) => (
+                                                                                <span
+                                                                                    key={`${artist.name}-${index}`}
+                                                                                    className={calendarStyles.eventCardArtistName}
+                                                                                >
+                                                                                    {artist.name}
+                                                                                    {index < artists.length - 1 ? '、' : ''}
+                                                                                </span>
+                                                                            ))}
+
+                                                                            {guests.map((guest, index) => (
+                                                                                <span
+                                                                                    key={`guest-${index}`}
+                                                                                    className={calendarStyles.eventCardArtistName}
+                                                                                >
+                                                                                    {index === 0
+                                                                                        ? `${artists.length > 0 ? '　' : ''}［ゲスト］`
+                                                                                        : ''}
+                                                                                    {guest}
+                                                                                    {index < guests.length - 1 ? '、' : ''}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </Link>
+                                                )
+                                            }
 
                                             return (
                                                 <article
