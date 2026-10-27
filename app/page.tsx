@@ -188,10 +188,6 @@ export default async function Home({
         'event_date',
         todayJst
       )
-      .eq(
-        'is_tentative',
-        false
-      )
       .order(
         'event_date',
         {
@@ -283,11 +279,14 @@ export default async function Home({
     })
 
   const nextEvent =
-    scheduledEvents[0] ??
-    null
+    scheduledEvents.find(
+      (event) => !event.is_tentative
+    ) ?? null
 
   const remainingEvents =
-    scheduledEvents.slice(1)
+    scheduledEvents.filter(
+      (event) => event.id !== nextEvent?.id
+    )
 
   /*
    * NEXT LIVE の画像URL

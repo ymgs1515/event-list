@@ -37,8 +37,8 @@ export default function FooterNav({
 
     useEffect(() => {
         router.prefetch('/')
-        router.prefetch('/archive')
         router.prefetch('/calendar')
+        router.prefetch('/archive')
         router.prefetch('/settings')
     }, [router])
 
@@ -209,38 +209,6 @@ export default function FooterNav({
                     type="button"
                     onClick={() =>
                         requestNavigation(
-                            '/archive'
-                        )
-                    }
-                    aria-current={
-                        effectiveCurrent ===
-                            'archive'
-                            ? 'page'
-                            : undefined
-                    }
-                    style={itemStyle(
-                        'archive'
-                    )}
-                >
-                    <NotebookDot
-                        size={23}
-                        strokeWidth={
-                            effectiveCurrent ===
-                                'archive'
-                                ? 2.4
-                                : 1.8
-                        }
-                    />
-
-                    <span>
-                        思い出
-                    </span>
-                </button>
-
-                <button
-                    type="button"
-                    onClick={() =>
-                        requestNavigation(
                             '/calendar'
                         )
                     }
@@ -266,6 +234,38 @@ export default function FooterNav({
 
                     <span>
                         カレンダー
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        requestNavigation(
+                            '/archive'
+                        )
+                    }
+                    aria-current={
+                        effectiveCurrent ===
+                            'archive'
+                            ? 'page'
+                            : undefined
+                    }
+                    style={itemStyle(
+                        'archive'
+                    )}
+                >
+                    <NotebookDot
+                        size={23}
+                        strokeWidth={
+                            effectiveCurrent ===
+                                'archive'
+                                ? 2.4
+                                : 1.8
+                        }
+                    />
+
+                    <span>
+                        思い出
                     </span>
                 </button>
 
